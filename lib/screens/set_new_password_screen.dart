@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/sign_in_screen.dart';
 
 class SetNewPasswordScreen extends StatefulWidget {
-  const SetNewPasswordScreen({super.key});
+  // 1. إضافة المتغير لاستقبال الـ Role عشان نرجعه لصفحة الـ Sign In
+  final String userRole;
+  const SetNewPasswordScreen({super.key, required this.userRole});
 
   @override
   State<SetNewPasswordScreen> createState() => _SetNewPasswordScreenState();
@@ -43,9 +45,12 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
+                    // 2. التعديل هنا: نمرر الـ userRole وأنت راجع لصفحة الـ Sign In
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const SignInScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => SignInScreen(userRole: widget.userRole)
+                      ),
                           (route) => false,
                     );
                   },
@@ -100,16 +105,14 @@ class _SetNewPasswordScreenState extends State<SetNewPasswordScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // حقول الإدخال
                   _buildInputField("Password", "************"),
                   const SizedBox(height: 25),
                   _buildInputField("Confirm Password", "************"),
 
                   const SizedBox(height: 40),
 
-                  // زر التحديث النهائي
                   ElevatedButton(
-                    onPressed: _showSuccessDialog, // استدعاء الـ Pop-up
+                    onPressed: _showSuccessDialog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1B3A4B),
                       minimumSize: const Size(double.infinity, 60),

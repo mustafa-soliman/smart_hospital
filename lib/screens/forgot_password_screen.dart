@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:smart_hospital/screens/verify_code_screen.dart'; // استيراد شاشة التحقق للربط
+import 'package:smart_hospital/screens/verify_code_screen.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
-  const ForgotPasswordScreen({super.key});
+  // 1. إضافة المتغير لاستقبال الـ Role
+  final String userRole;
+  const ForgotPasswordScreen({super.key, required this.userRole});
 
   @override
   Widget build(BuildContext context) {
@@ -10,16 +12,12 @@ class ForgotPasswordScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. الخلفية الموحدة للمشروع
           Image.asset(
             'assets/images/hospital_bg.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(color: Colors.white),
           ),
-
-          // 2. طبقة التفتيح الشفافة
           Container(color: Colors.white.withOpacity(0.4)),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -27,8 +25,6 @@ class ForgotPasswordScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
-
-                  // زر الرجوع الدائري
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Container(
@@ -41,38 +37,22 @@ class ForgotPasswordScreen extends StatelessWidget {
                       child: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black),
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // عنوان الصفحة
                   const Text(
                     'Forgot password',
-                    style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1B3A4B)
-                    ),
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                   ),
                   const SizedBox(height: 10),
                   const Text(
                     'Please enter your email to reset the password',
                     style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // تسمية حقل الإدخال
                   const Text(
                     'Email',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1B3A4B)
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                   ),
                   const SizedBox(height: 10),
-
-                  // حقل إدخال البريد الإلكتروني
                   TextField(
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
@@ -80,23 +60,17 @@ class ForgotPasswordScreen extends StatelessWidget {
                       prefixIcon: const Icon(Icons.email_outlined, color: Colors.black),
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.9),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
                       contentPadding: const EdgeInsets.symmetric(vertical: 20),
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // زر إعادة ضبط كلمة المرور (الربط تم هنا)
                   ElevatedButton(
                     onPressed: () {
-                      // الانتقال لشاشة التحقق من الكود (Verify Code)
+                      // 2. التعديل هنا: تمرير الـ userRole لصفحة الـ Verify Code
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const VerifyCodeScreen()),
+                        MaterialPageRoute(builder: (context) => VerifyCodeScreen(userRole: userRole)),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -107,11 +81,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     ),
                     child: const Text(
                       'Reset Password',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

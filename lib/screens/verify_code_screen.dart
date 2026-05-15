@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/password_reset_success_screen.dart';
 
 class VerifyCodeScreen extends StatelessWidget {
-  const VerifyCodeScreen({super.key});
+  final String userRole; // إضافة المتغير
+  const VerifyCodeScreen({super.key, required this.userRole}); // تحديث الـ Constructor
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +26,14 @@ class VerifyCodeScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   const Text('We sent a reset link to jogn.doe@gmail.com\nenter 5 digit code that mentioned in the email', style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 40),
-                  // مربعات إدخال الكود
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(5, (index) => _buildCodeBox(context)),
                   ),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PasswordResetSuccessScreen())),
+                    // التعديل هنا: تمرير الـ userRole لصفحة النجاح
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PasswordResetSuccessScreen(userRole: userRole))),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B3A4B), minimumSize: const Size(double.infinity, 60), shape: const StadiumBorder()),
                     child: const Text('Verify Code', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   ),

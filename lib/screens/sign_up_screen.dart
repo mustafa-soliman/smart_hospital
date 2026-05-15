@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/home_screen.dart';
 
 class SignUpScreen extends StatelessWidget {
-  const SignUpScreen({super.key});
+  final String userRole;
+  const SignUpScreen({super.key, required this.userRole});
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +27,16 @@ class SignUpScreen extends StatelessWidget {
                   const SizedBox(height: 15),
                   _buildField("Password", Icons.lock_outline, "************", isPass: true),
                   const SizedBox(height: 30),
-                  // الربط بصفحة الـ Home بعد التسجيل
                   ElevatedButton(
-                    onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen())),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B3A4B), minimumSize: const Size(double.infinity, 60), shape: const StadiumBorder()),
+                    onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen(userRole: userRole))
+                    ),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1B3A4B),
+                        minimumSize: const Size(double.infinity, 60),
+                        shape: const StadiumBorder()
+                    ),
                     child: const Text('Sign Up', style: TextStyle(color: Colors.white, fontSize: 18)),
                   ),
                   const SizedBox(height: 30),

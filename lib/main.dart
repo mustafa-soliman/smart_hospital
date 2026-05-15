@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:smart_hospital/screens/splash_screen.dart'; // تأكد من إنشاء هذا الملف
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_hospital/screens/splash_screen.dart';
+// استيراد الملفات الجديدة للربط
+import 'package:smart_hospital/features/doctor_role/home_doctor/ui/main_layout.dart';
+import 'package:smart_hospital/features/doctor_role/home_doctor/ui/home_doctor_screen.dart';
 
 void main() {
   runApp(const SmartHayatHospitalApp());
@@ -10,22 +14,29 @@ class SmartHayatHospitalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      // لإخفاء شريط الـ Debug المزعج في الزاوية
-      debugShowCheckedModeBanner: false,
-
-      title: 'Smart Hayat Hospital',
-
-      // ثيم التطبيق الموحد بالألوان التي اخترناها (الأزرق الداكن)
-      theme: ThemeData(
-        primaryColor: const Color(0xFF1B3A4B),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B3A4B)),
-        useMaterial3: true,
-        fontFamily: 'Roboto', // أو أي خط تفضله
-      ),
-
-      // نقطة البداية: شاشة الـ Splash التي تحتوي على تصميم المبنى واللوجو
-      home: const SplashScreen(),
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Smart Hayat Hospital',
+          theme: ThemeData(
+            primaryColor: const Color(0xFF1B3A4B),
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B3A4B)),
+            useMaterial3: true,
+            fontFamily: 'Roboto',
+          ),
+          // البداية هتكون الـ SplashScreen زي ما هي
+          home: const SplashScreen(),
+          // ضفت لك الـ Routes هنا عشان التنقل يكون أسهل في البرنامج كله
+          routes: {
+            '/main_layout': (context) => const MainLayout(),
+            '/home': (context) => const HomeDoctorScreen(),
+          },
+        );
+      },
     );
   }
 }

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/set_new_password_screen.dart';
 
 class PasswordResetSuccessScreen extends StatelessWidget {
-  const PasswordResetSuccessScreen({super.key});
+  final String userRole; // إضافة المتغير
+  const PasswordResetSuccessScreen({super.key, required this.userRole});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,8 @@ class PasswordResetSuccessScreen extends StatelessWidget {
                   const Text('Your password has been successfully reset.\nclick confirm to set a new password.', style: TextStyle(color: Colors.grey)),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SetNewPasswordScreen())),
+                    // التعديل هنا: تمرير الـ userRole
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SetNewPasswordScreen(userRole: userRole))),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B3A4B), minimumSize: const Size(double.infinity, 60), shape: const StadiumBorder()),
                     child: const Text('Confirm', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+// تأكد أن المسار ده صح حسب اسم المجلد عندك
 import 'package:smart_hospital/screens/role_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -17,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
 
-    // 1. الأنيميشن اللي بيخلي اللوجو يظهر بالتدريج
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -25,12 +25,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
-    // 2. الانتقال لصفحة اختيار الأدوار بعد 3 ثواني
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+          MaterialPageRoute(
+            // تأكد إن الكلاس ده هو اللي موجود جوه ملف role_selection_screen.dart
+            builder: (context) => const RoleSelectionScreen(),
+          ),
         );
       }
     });
@@ -48,22 +50,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // خلفية المستشفى - استخدمنا hospital_bg لأنها اللي شغالة في صفحة الأدوار
           Image.asset(
             'assets/images/hospital_background.png',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              return Container(color: Colors.white); // لو الصورة متمسحتش يظهر أبيض بدل خطأ أحمر
+              return Container(color: Colors.white);
             },
           ),
-
-          // المحتوى في المنتصف (اللوجو والأسماء)
           FadeTransition(
             opacity: _fadeAnimation,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // لوجو المستشفى
                 Image.asset(
                   'assets/images/shh_logo.png',
                   width: 180,
@@ -72,7 +70,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   const Icon(Icons.local_hospital, size: 100, color: Color(0xFF1B3A4B)),
                 ),
                 const SizedBox(height: 25),
-                // الاسم بالعربي باللون الكحلي الموحد
                 const Text(
                   'مستشفى الحياة الذكية',
                   textAlign: TextAlign.center,
@@ -83,7 +80,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   ),
                 ),
                 const SizedBox(height: 5),
-                // الاسم بالإنجليزي
                 const Text(
                   'SMART HAYAT HOSPITAL',
                   textAlign: TextAlign.center,
