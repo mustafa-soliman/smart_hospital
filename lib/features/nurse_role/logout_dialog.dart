@@ -1,50 +1,100 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:smart_hospital/screens/sign_in_screen.dart';
 
 class LogoutDialog extends StatelessWidget {
   const LogoutDialog({super.key});
 
+  static void show(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.4),
+      builder: (BuildContext context) => const LogoutDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.r)),
-      backgroundColor: const Color(0xFFF1F3F4),
+      backgroundColor: const Color(0xFFEBEFF2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
-        padding: EdgeInsets.all(30.r),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Logout", style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: const Color(0xFF1B3A4B))),
-            SizedBox(height: 15.h),
-            Text("are you sure you want to log out?", textAlign: TextAlign.center, style: TextStyle(fontSize: 16.sp, color: const Color(0xFF1B3A4B))),
-            SizedBox(height: 30.h),
+            const SizedBox(height: 8),
+            const Text(
+              'Logout',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0E2533),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'are you sure you want to log out?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Color(0xFF3E5A6B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF1B3A4B)),
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.r)),
+                      backgroundColor: Colors.white,
+                      minimumSize: const Size(0, 48),
+                      side: const BorderSide(color: Color(0xFFB5C4CE), width: 1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                     ),
-                    child: Text("Cencel", style: TextStyle(color: Colors.grey, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Cencel',
+                      style: TextStyle(
+                        color: Color(0xFF7F9AA9),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(width: 15.w),
+                const SizedBox(width: 14),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => const SignInScreen(userRole: 'Patient'),
+                        ),
+                            (route) => false,
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1B3A4B),
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.r)),
+                      backgroundColor: const Color(0xFF163243),
+                      minimumSize: const Size(0, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      elevation: 0,
                     ),
-                    child: Text("Yes, Logout", style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'Yes, Logout',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 4),
           ],
         ),
       ),

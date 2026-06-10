@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_hospital/features/patient_role/cancel_appointment_dialog.dart';
+import 'package:smart_hospital/features/patient_role/patient_book_appointment_screen.dart';
 
 class PatientAppointmentDetailsScreen extends StatelessWidget {
   const PatientAppointmentDetailsScreen({super.key});
@@ -59,7 +60,14 @@ class PatientAppointmentDetailsScreen extends StatelessWidget {
             _buildNotesCard(),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PatientBookAppointmentScreen(),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF007BFF),
                 minimumSize: const Size(double.infinity, 60),

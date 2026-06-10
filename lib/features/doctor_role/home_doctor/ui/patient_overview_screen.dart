@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class PatientOverviewScreen extends StatelessWidget {
-  const PatientOverviewScreen({super.key});
+  final Function(int)? onNavigate;
+
+  const PatientOverviewScreen({super.key, this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +13,6 @@ class PatientOverviewScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // النص الرمادي الصغير في أعلى الشاشة
             const Padding(
               padding: EdgeInsets.only(left: 20, top: 10),
               child: Text(
@@ -19,8 +20,6 @@ class PatientOverviewScreen extends StatelessWidget {
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ),
-
-            // AppBar المخصص مع زر الرجوع الدائري
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Row(
@@ -29,7 +28,13 @@ class PatientOverviewScreen extends StatelessWidget {
                     backgroundColor: Colors.grey[200],
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 18),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        if (onNavigate != null) {
+                          onNavigate!(0);
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
                     ),
                   ),
                   const Expanded(
@@ -44,20 +49,18 @@ class PatientOverviewScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // كارت المريض مع الصورة والنقطة الخضراء
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
                       ),
                       child: Row(
                         children: [
@@ -65,7 +68,7 @@ class PatientOverviewScreen extends StatelessWidget {
                             children: [
                               CircleAvatar(
                                 radius: 40,
-                                backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                                backgroundImage: AssetImage('assets/images/default_avatar.png'),
                               ),
                               Positioned(
                                 bottom: 5,
@@ -86,18 +89,17 @@ class PatientOverviewScreen extends StatelessWidget {
                                 const Text("Akram Emad", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                                 const Text("Age: 28 • Male", style: TextStyle(color: Colors.grey)),
                                 const SizedBox(height: 10),
-                                // ملصق الفحص السنوي مع أيقونة الحقيبة
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
+                                    color: Colors.blue.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.medical_services_outlined, size: 14, color: Colors.blue),
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: 6),
                                       Text(
                                         "Annual Wellness Checkup",
                                         style: TextStyle(color: Colors.blue, fontSize: 11, fontWeight: FontWeight.bold),
@@ -111,7 +113,6 @@ class PatientOverviewScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 30),
                     const Text("SCHEDULE DETAILS", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
                     const SizedBox(height: 15),
@@ -122,7 +123,6 @@ class PatientOverviewScreen extends StatelessWidget {
                         _buildScheduleTile(Icons.access_time, "TIME", "09:30 AM"),
                       ],
                     ),
-
                     const SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,7 +137,7 @@ class PatientOverviewScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,13 +149,12 @@ class PatientOverviewScreen extends StatelessWidget {
                           const SizedBox(height: 20),
                           const Divider(),
                           const SizedBox(height: 15),
-                          // مربع الفحص المطلوب مع أيقونة المستند
                           Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
+                                  color: Colors.blue.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(Icons.assignment_outlined, color: Colors.blue, size: 20),
@@ -179,8 +178,6 @@ class PatientOverviewScreen extends StatelessWidget {
           ],
         ),
       ),
-      // شريط التنقل السفلي الموحد
-      bottomNavigationBar: _buildBottomNav(2),
     );
   }
 
@@ -206,26 +203,6 @@ class PatientOverviewScreen extends StatelessWidget {
             Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(int activeIndex) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 25),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B3A4B),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Icon(Icons.home_outlined, color: activeIndex == 0 ? Colors.white : Colors.grey),
-          Icon(Icons.calendar_month_outlined, color: activeIndex == 1 ? Colors.white : Colors.grey),
-          Icon(Icons.people, color: activeIndex == 2 ? Colors.white : Colors.grey),
-          Icon(Icons.settings_outlined, color: activeIndex == 3 ? Colors.white : Colors.grey),
-        ],
       ),
     );
   }

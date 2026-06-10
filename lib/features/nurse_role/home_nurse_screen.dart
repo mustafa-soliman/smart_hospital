@@ -1,245 +1,387 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'urgent_alerts_screen.dart';
 import 'patient_details_nurse_screen.dart';
-import 'profile_screen.dart';
+import 'urgent_alerts_screen.dart';
+import 'select_doctor_screen.dart';
 
-class HomeNurseScreen extends StatelessWidget {
+class PatientModel {
+  final String id;
+  final String name;
+  final String room;
+  final String status;
+  final String? subtitle;
+  final IconData actionIcon;
+  final List<IconData>? leftIcons;
+
+  PatientModel({
+    required this.id,
+    required this.name,
+    required this.room,
+    required this.status,
+    this.subtitle,
+    required this.actionIcon,
+    this.leftIcons,
+  });
+}
+
+class HomeNurseScreen extends StatefulWidget {
   const HomeNurseScreen({super.key});
+
+  @override
+  State<HomeNurseScreen> createState() => _HomeNurseScreenState();
+}
+
+class _HomeNurseScreenState extends State<HomeNurseScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<PatientModel> _allPatients = [
+    PatientModel(
+      id: '1',
+      name: 'Akram Emad',
+      room: 'ROOM 302',
+      status: 'STABLE',
+      actionIcon: Icons.refresh_rounded,
+      leftIcons: [Icons.analytics_outlined, Icons.link],
+    ),
+    PatientModel(
+      id: '2',
+      name: 'Omar Reda',
+      room: 'ROOM 305',
+      status: 'CRITICAL',
+      subtitle: 'Vitals Unstable',
+      actionIcon: Icons.edit_outlined,
+    ),
+    PatientModel(
+      id: '3',
+      name: 'Ali Amer',
+      room: 'ROOM 212',
+      status: 'NEEDS ATTENTION',
+      subtitle: 'Pending Lab Results',
+      actionIcon: Icons.refresh_rounded,
+    ),
+    PatientModel(
+      id: '4',
+      name: 'Emad Ali',
+      room: 'ROOM 401',
+      status: 'STABLE',
+      subtitle: 'Ready for discharge',
+      actionIcon: Icons.edit_outlined,
+    ),
+  ];
+
+  Color _getBadgeBg(String status) {
+    switch (status) {
+      case 'STABLE':
+        return const Color(0xFFE8F8EE);
+      case 'CRITICAL':
+        return const Color(0xFFFDEBEB);
+      case 'NEEDS ATTENTION':
+        return const Color(0xFFFEF5E6);
+      default:
+        return Colors.grey.shade100;
+    }
+  }
+
+  Color _getBadgeTextColor(String status) {
+    switch (status) {
+      case 'STABLE':
+        return const Color(0xFF53C07F);
+      case 'CRITICAL':
+        return const Color(0xFFE05858);
+      case 'NEEDS ATTENTION':
+        return const Color(0xFFD4973B);
+      default:
+        return Colors.grey.shade700;
+    }
+  }
+
+  void _navigateTo(Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFC),
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الجزء العلوي: ترحيب مع الصورة الافتراضية
+              const SizedBox(height: 24),
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28.r,
-                    backgroundColor: Colors.grey[200],
-                    backgroundImage: const AssetImage('assets/images/default_avatar.png'),
+                  const CircleAvatar(
+                    radius: 26,
+                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
                   ),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Good Morning,", style: TextStyle(fontSize: 18.sp, color: Colors.black87)),
-                      Text("Nurse", style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: const Color(0xFF1B3A4B))),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 25.h),
-              // شريط البحث
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 15.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F4),
-                  borderRadius: BorderRadius.circular(15.r),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Search patient or room...",
-                    hintStyle: TextStyle(color: Colors.grey, fontSize: 14.sp),
-                    icon: const Icon(Icons.search, color: Colors.grey),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 25.h),
-              // كروت الإحصائيات
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      title: "Total Patients",
-                      value: "1,240",
-                      icon: Icons.people_alt_rounded,
-                      color: const Color(0xFF007BFF),
-                      textColor: Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 15.w),
-                  Expanded(
-                    child: _buildStatCard(
-                      title: "Today's\nAppointments",
-                      value: "12",
-                      icon: Icons.calendar_today_rounded,
-                      color: Colors.white,
-                      textColor: Colors.black87,
-                      iconColor: const Color(0xFF007BFF),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 30.h),
-              // قائمة غرف المرضى
-              _buildNurseRoomCard(
-                context: context,
-                room: "ROOM 302",
-                name: "Akram Emad",
-                status: "STABLE",
-                statusColor: Colors.green,
-                infoIcon1: Icons.show_chart,
-                infoIcon2: Icons.link,
-                actionIcon: Icons.sync,
-                actionBgColor: const Color(0xFFE3F2FD),
-              ),
-              _buildNurseRoomCard(
-                context: context,
-                room: "ROOM 305",
-                name: "Omar Reda",
-                status: "CRITICAL",
-                statusColor: Colors.red,
-                alertText: "Vitals Unstable",
-                alertIcon: Icons.wb_sunny_rounded,
-                actionIcon: Icons.edit_outlined,
-                actionBgColor: const Color(0xFFFFEBEE),
-                actionIconColor: Colors.red,
-              ),
-              _buildNurseRoomCard(
-                context: context,
-                room: "ROOM 212",
-                name: "Ali Amer",
-                status: "NEEDS ATTENTION",
-                statusColor: Colors.orange,
-                alertText: "Pending Lab Results",
-                alertIcon: Icons.access_time,
-                actionIcon: Icons.sync,
-                actionBgColor: const Color(0xFFE3F2FD),
-              ),
-              _buildNurseRoomCard(
-                context: context,
-                room: "ROOM 401",
-                name: "Emad Ali",
-                status: "STABLE",
-                statusColor: Colors.green,
-                alertText: "Ready for discharge",
-                alertIcon: Icons.assignment_outlined,
-                actionIcon: Icons.edit_outlined,
-                actionBgColor: const Color(0xFFE3F2FD),
-                actionIconColor: Colors.blue,
-              ),
-              SizedBox(height: 20.h),
-            ],
-          ),
-        ),
-      ),
-      // الشريط السفلي مع ربط صفحة البروفايل والتنبيهات
-      bottomNavigationBar: Container(
-        margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 25.h),
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1B3A4B),
-          borderRadius: BorderRadius.circular(30.r),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Icon(Icons.home, color: Colors.white, size: 28),
-            Icon(Icons.calendar_month_outlined, color: Colors.grey, size: 26.r),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const UrgentAlertsScreen())),
-              child: Icon(Icons.people_outline, color: Colors.grey, size: 26.r),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())),
-              child: Icon(Icons.settings_outlined, color: Colors.grey, size: 26.r),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard({required String title, required String value, required IconData icon, required Color color, required Color textColor, Color? iconColor}) {
-    return Container(
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20.r)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor ?? textColor, size: 28.r),
-          SizedBox(height: 15.h),
-          Text(title, style: TextStyle(color: textColor.withValues(alpha: 0.7), fontSize: 12.sp)),
-          Text(value, style: TextStyle(color: textColor, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNurseRoomCard({
-    required BuildContext context,
-    required String room,
-    required String name,
-    required String status,
-    required Color statusColor,
-    String? alertText,
-    IconData? alertIcon,
-    IconData? infoIcon1,
-    IconData? infoIcon2,
-    required IconData actionIcon,
-    required Color actionBgColor,
-    Color actionIconColor = Colors.blue
-  }) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDetailsNurseScreen())),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 20.h),
-        padding: EdgeInsets.all(18.r),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)]
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(room, style: TextStyle(color: const Color(0xFF007BFF), fontWeight: FontWeight.bold, fontSize: 13.sp)),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10.r)),
-                  child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10.sp)),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(name, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            SizedBox(height: 15.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    if (infoIcon1 != null) Icon(infoIcon1, size: 20.r, color: Colors.blue.withValues(alpha: 0.2)),
-                    if (infoIcon1 != null) SizedBox(width: 10.w),
-                    if (infoIcon2 != null) Icon(infoIcon2, size: 20.r, color: Colors.blue.withValues(alpha: 0.2)),
-                    if (alertText != null) Row(
+                  const SizedBox(width: 14),
+                  RichText(
+                    text: const TextSpan(
+                      text: 'Good Morning, ',
+                      style: TextStyle(
+                        color: Color(0xFF1E293B),
+                        fontSize: 22,
+                        fontWeight: FontWeight.w400,
+                      ),
                       children: [
-                        Icon(alertIcon, size: 18.r, color: status == "CRITICAL" ? Colors.red : Colors.grey),
-                        SizedBox(width: 8.w),
-                        Text(alertText, style: TextStyle(color: status == "CRITICAL" ? Colors.red : Colors.grey, fontSize: 12.sp)),
+                        TextSpan(
+                          text: 'Nurse',
+                          style: TextStyle(
+                            color: Color(0xFF1E293B),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                Container(
-                    padding: EdgeInsets.all(10.r),
-                    decoration: BoxDecoration(color: actionBgColor, borderRadius: BorderRadius.circular(12.r)),
-                    child: Icon(actionIcon, color: actionIconColor, size: 22.r)
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(fontSize: 16),
+                  decoration: const InputDecoration(
+                    hintText: 'Search patient or room...',
+                    hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
+                    prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8), size: 22),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 14),
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _navigateTo(const UrgentAlertsScreen()),
+                      child: Container(
+                        height: 125,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF007AFF),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF007AFF).withValues(alpha: 0.25),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            )
+                          ],
+                        ),
+                        child: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(Icons.groups_outlined, color: Colors.white, size: 28),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Total Patients',
+                                  style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  '1,240',
+                                  style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Container(
+                      height: 125,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(Icons.calendar_today_outlined, color: Color(0xFF007AFF), size: 24),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Today's Appointments",
+                                style: TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                '12',
+                                style: TextStyle(color: Color(0xFF007AFF), fontSize: 26, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+              Expanded(
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _allPatients.length,
+                  itemBuilder: (context, index) {
+                    final patient = _allPatients[index];
+                    final String status = patient.status;
+
+                    return GestureDetector(
+                      onTap: () {
+                        _navigateTo(PatientDetailsNurseScreen(
+                          patientName: patient.name,
+                          roomNumber: patient.room,
+                        ));
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  patient.room,
+                                  style: const TextStyle(
+                                    color: Color(0xFF007AFF),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _getBadgeBg(status),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      color: _getBadgeTextColor(status),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              patient.name,
+                              style: const TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 19,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: patient.subtitle != null
+                                      ? Row(
+                                    children: [
+                                      Icon(
+                                        status == 'CRITICAL' ? Icons.brightness_1 : Icons.assignment_outlined,
+                                        color: _getBadgeTextColor(status),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        patient.subtitle!,
+                                        style: TextStyle(
+                                          color: _getBadgeTextColor(status),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                      : Row(
+                                    children: [
+                                      if (patient.leftIcons != null) ...[
+                                        Icon(patient.leftIcons![0], color: const Color(0xFF94A3B8), size: 22),
+                                        const SizedBox(width: 10),
+                                        Transform.rotate(
+                                          angle: 0.7,
+                                          child: Icon(patient.leftIcons![1], color: const Color(0xFF94A3B8), size: 22),
+                                        ),
+                                      ]
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    _navigateTo(const SelectDoctorScreen());
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: status == 'CRITICAL' ? const Color(0xFFFDEBEB) : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      patient.actionIcon,
+                                      color: status == 'CRITICAL' ? const Color(0xFFE05858) : const Color(0xFF1E293B),
+                                      size: 22,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

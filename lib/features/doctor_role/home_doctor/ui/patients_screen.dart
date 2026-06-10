@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'patient_overview_screen.dart';
 
 class PatientsScreen extends StatelessWidget {
-  const PatientsScreen({super.key});
+  final Function(int) onNavigate;
+
+  const PatientsScreen({super.key, required this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -12,12 +14,10 @@ class PatientsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // النص الرمادي العلوي
             const Padding(
               padding: EdgeInsets.only(left: 20, top: 10),
               child: Text("Patients", style: TextStyle(color: Colors.grey, fontSize: 12)),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Row(
@@ -26,7 +26,7 @@ class PatientsScreen extends StatelessWidget {
                     backgroundColor: Colors.grey[200],
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 18),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => onNavigate(0),
                     ),
                   ),
                   const Expanded(
@@ -38,7 +38,6 @@ class PatientsScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -49,12 +48,11 @@ class PatientsScreen extends StatelessWidget {
                     const Text("Active List", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const Text("You have 24 appointments scheduled this week.", style: TextStyle(color: Colors.grey, fontSize: 14)),
                     const SizedBox(height: 25),
-
-                    _buildPatientCard(context, name: "Akram Emad", info: "28, Male", condition: "Annual Checkup", color: Colors.blue),
-                    _buildPatientCard(context, name: "Omar Reda", info: "45, Male", condition: "Annual Checkup", color: Colors.orange),
-                    _buildPatientCard(context, name: "Ali Amer", info: "32, Male", condition: "Chronic Back Pain", color: Colors.red),
-                    _buildPatientCard(context, name: "David Smith", info: "68, Male", condition: "Hypertension Review", color: Colors.green),
-                    _buildPatientCard(context, name: "Emad Ali", info: "28, Male", condition: "Post-op Follow-up", color: Colors.indigo),
+                    _buildPatientCard(onNavigate: onNavigate, name: "Akram Emad", info: "28, Male", condition: "Annual Checkup", color: Colors.blue),
+                    _buildPatientCard(onNavigate: onNavigate, name: "Omar Reda", info: "45, Male", condition: "Annual Checkup", color: Colors.orange),
+                    _buildPatientCard(onNavigate: onNavigate, name: "Ali Amer", info: "32, Male", condition: "Chronic Back Pain", color: Colors.red),
+                    _buildPatientCard(onNavigate: onNavigate, name: "David Smith", info: "68, Male", condition: "Hypertension Review", color: Colors.green),
+                    _buildPatientCard(onNavigate: onNavigate, name: "Emad Ali", info: "28, Male", condition: "Post-op Follow-up", color: Colors.indigo),
                   ],
                 ),
               ),
@@ -62,24 +60,28 @@ class PatientsScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(2),
     );
   }
 
-  Widget _buildPatientCard(BuildContext context, {required String name, required String info, required String condition, required Color color}) {
+  static Widget _buildPatientCard(
+      {required Function(int) onNavigate,
+        required String name,
+        required String info,
+        required String condition,
+        required Color color}) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientOverviewScreen())),
+      onTap: () => onNavigate(4),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
         ),
         child: Row(
           children: [
-            const CircleAvatar(radius: 30, backgroundImage: NetworkImage('https://via.placeholder.com/150')),
+            const CircleAvatar(radius: 30, backgroundImage: AssetImage('assets/images/default_avatar.png')),
             const SizedBox(width: 15),
             Expanded(
               child: Column(
@@ -90,7 +92,7 @@ class PatientsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                     child: Text(condition, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
                   ),
                 ],
@@ -99,23 +101,6 @@ class PatientsScreen extends StatelessWidget {
             const Icon(Icons.arrow_forward_ios, color: Colors.black12, size: 16),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav(int activeIndex) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 25),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(color: const Color(0xFF1B3A4B), borderRadius: BorderRadius.circular(30)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Icon(Icons.home_outlined, color: activeIndex == 0 ? Colors.white : Colors.grey),
-          Icon(Icons.calendar_month_outlined, color: activeIndex == 1 ? Colors.white : Colors.grey),
-          Icon(Icons.people, color: activeIndex == 2 ? Colors.white : Colors.grey),
-          Icon(Icons.settings_outlined, color: activeIndex == 3 ? Colors.white : Colors.grey),
-        ],
       ),
     );
   }

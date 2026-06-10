@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smart_hospital/screens/splash_screen.dart';
-// استيراد الملفات الجديدة للربط
 import 'package:smart_hospital/features/doctor_role/home_doctor/ui/main_layout.dart';
-import 'package:smart_hospital/features/doctor_role/home_doctor/ui/home_doctor_screen.dart';
 
 void main() {
   runApp(const SmartHayatHospitalApp());
@@ -28,12 +26,9 @@ class SmartHayatHospitalApp extends StatelessWidget {
             useMaterial3: true,
             fontFamily: 'Roboto',
           ),
-          // البداية هتكون الـ SplashScreen زي ما هي
           home: const SplashScreen(),
-          // ضفت لك الـ Routes هنا عشان التنقل يكون أسهل في البرنامج كله
           routes: {
             '/main_layout': (context) => const MainLayout(),
-            '/home': (context) => const HomeDoctorScreen(),
           },
         );
       },

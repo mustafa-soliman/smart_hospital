@@ -1,12 +1,37 @@
 import 'package:flutter/material.dart';
 
-class ScheduleDoctorScreen extends StatelessWidget {
+class ScheduleDoctorScreen extends StatefulWidget {
   const ScheduleDoctorScreen({super.key});
+
+  @override
+  State<ScheduleDoctorScreen> createState() => _ScheduleDoctorScreenState();
+}
+
+class _ScheduleDoctorScreenState extends State<ScheduleDoctorScreen> {
+  DateTime selectedDate = DateTime(2023, 10, 17);
+
+  void _onDateSelected(DateTime date) {
+    setState(() {
+      selectedDate = date;
+    });
+  }
+
+  void _onTodayPressed() {
+    setState(() {
+      selectedDate = DateTime(2023, 10, 17);
+    });
+  }
+
+  void _onAddSlotPressed() {}
+
+  void _onFilterPressed() {}
+
+  void _onAppointmentTap(String patientName) {}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFC), // خلفية الصفحة الفاتحة جداً
+      backgroundColor: const Color(0xFFFBFBFC),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -32,202 +57,250 @@ class ScheduleDoctorScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            // Header: الشهر وزر اليوم
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   "October 2023",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                 ),
                 TextButton(
-                  onPressed: () {},
-                  child: const Text("Today", style: TextStyle(color: Colors.blue, fontSize: 16)),
+                  onPressed: _onTodayPressed,
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.blue.withValues(alpha: 0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                  child: const Text("Today", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
-            // قائمة الأيام الأفقية
+            const SizedBox(height: 15),
             SizedBox(
-              height: 100,
+              height: 90,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildDateItem("MON", "16", false),
-                  _buildDateItem("TUE", "17", true), // اليوم المختار (أزرق)
-                  _buildDateItem("WED", "18", false),
-                  _buildDateItem("THU", "19", false),
-                  _buildDateItem("FRI", "20", false),
+                  _buildDateTile("Mon", "16", DateTime(2023, 10, 16)),
+                  _buildDateTile("Tue", "17", DateTime(2023, 10, 17)),
+                  _buildDateTile("Wed", "18", DateTime(2023, 10, 18)),
+                  _buildDateTile("Thu", "19", DateTime(2023, 10, 19)),
+                  _buildDateTile("Fri", "20", DateTime(2023, 10, 20)),
+                  _buildDateTile("Sat", "21", DateTime(2023, 10, 21)),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
-
-            // عنوان المواعيد القادمة مع الفلاتر
-            const Row(
+            const SizedBox(height: 25),
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   "Upcoming Appointments",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                 ),
-                Row(
-                  children: [
-                    Icon(Icons.tune, color: Colors.grey, size: 18),
-                    SizedBox(width: 5),
-                    Text("Filters", style: TextStyle(color: Colors.grey, fontSize: 14)),
-                  ],
+                IconButton(
+                  icon: const Icon(Icons.tune, color: Colors.grey),
+                  onPressed: _onFilterPressed,
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
-            // كروت المواعيد
-            _buildDetailedCard(
-              name: "Akram Emad",
-              time: "09:30 AM",
-              task: "Annual Wellness Checkup",
+            const SizedBox(height: 10),
+            _buildAppointmentCard(
               status: "CONFIRMED",
               statusColor: Colors.green,
-              icon: Icons.calendar_month,
-              hasBorder: true, // الخط الأزرق السفلي
+              time: "09:30 AM",
+              name: "Akram Emad",
+              task: "Annual Wellness Checkup",
+              hasBorder: true,
+              icon: Icons.calendar_today_outlined,
             ),
-            _buildDetailedCard(
-              name: "Omar Reda",
-              time: "10:15 AM",
-              task: "Medication Review",
+            _buildAppointmentCard(
               status: "PENDING",
               statusColor: Colors.orange,
+              time: "11:00 AM",
+              name: "Omar Reda",
+              task: "Medication Review",
+              hasBorder: false,
               icon: Icons.medical_services_outlined,
             ),
-            _buildDetailedCard(
-              name: "Ali Amer",
-              time: "11:00 AM",
-              task: "Medication Review",
-              status: "CONFIRMED",
-              statusColor: Colors.green,
-              icon: Icons.link,
-            ),
-
-            const SizedBox(height: 10),
-
-            // كارت إضافة موعد (Add Slot)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.grey[50], shape: BoxShape.circle),
-                    child: const Icon(Icons.add, color: Colors.grey),
+            GestureDetector(
+              onTap: _onAddSlotPressed,
+              child: CustomPaint(
+                painter: DashedBorderPainter(color: Colors.blue.withValues(alpha: 0.4)),
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: 10),
-                  const Text("Add Slot", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const Text("12:30 PM - 01:00 PM", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
+                  child: const Column(
+                    children: [
+                      Icon(Icons.add, color: Colors.blue, size: 28),
+                      SizedBox(height: 8),
+                      Text("Add Slot", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
           ],
         ),
       ),
-      // تم إزالة الـ BottomNavigationBar من هنا ليعمل من خلال الـ MainLayout
     );
   }
 
-  // ويدجت التاريخ
-  Widget _buildDateItem(String day, String date, bool isSelected) {
-    return Container(
-      width: 70,
-      margin: const EdgeInsets.only(right: 15),
-      decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFF0056D2) : const Color(0xFFF4F6F8),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(day, style: TextStyle(color: isSelected ? Colors.white70 : Colors.grey, fontSize: 12)),
-          const SizedBox(height: 5),
-          Text(date, style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.bold)),
-        ],
+  Widget _buildDateTile(String day, String date, DateTime tileDate) {
+    final bool isSelected = DateUtils.isSameDay(selectedDate, tileDate);
+    return GestureDetector(
+      onTap: () => _onDateSelected(tileDate),
+      child: Container(
+        width: 60,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : const Color(0xFFF1F5FB),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              day,
+              style: TextStyle(color: isSelected ? Colors.white70 : Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              date,
+              style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 4),
+              const CircleAvatar(radius: 2, backgroundColor: Colors.white),
+            ]
+          ],
+        ),
       ),
     );
   }
 
-  // ويدجت كروت المواعيد
-  Widget _buildDetailedCard({
-    required String name,
-    required String time,
-    required String task,
+  Widget _buildAppointmentCard({
     required String status,
     required Color statusColor,
+    required String time,
+    required String name,
+    required String task,
+    required bool hasBorder,
     required IconData icon,
-    bool hasBorder = false,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.blue.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
-                      child: Icon(icon, color: Colors.blue, size: 20),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                      child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                const SizedBox(height: 4),
-                Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(task, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const CircleAvatar(radius: 12, backgroundImage: NetworkImage('https://via.placeholder.com/150')),
-                    const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.blue),
-                  ],
-                ),
-              ],
+    return GestureDetector(
+      onTap: () => _onAppointmentTap(name),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: Colors.blue, size: 18),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          status,
+                          style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B))),
+                  Text(task, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const CircleAvatar(
+                        radius: 14,
+                        backgroundImage: AssetImage('assets/images/default_avatar.png'),
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.blue.withValues(alpha: 0.7)),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (hasBorder)
-            Container(
+            if (hasBorder)
+              Container(
                 height: 4,
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20))
-                )
-            ),
-        ],
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  DashedBorderPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    final RRect rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(20),
+    );
+
+    final path = Path()..addRRect(rrect);
+    const dashWidth = 5.0;
+    const dashSpace = 3.0;
+
+    final metrics = path.computeMetrics();
+    for (final metric in metrics) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final extractPath = metric.extractPath(distance, distance + dashWidth);
+        canvas.drawPath(extractPath, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

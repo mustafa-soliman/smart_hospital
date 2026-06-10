@@ -4,8 +4,21 @@ import 'package:smart_hospital/features/patient_role/patient_doctor_details_scre
 import 'package:smart_hospital/features/patient_role/patient_emergency_category_screen.dart';
 import 'package:smart_hospital/features/patient_role/patient_chat_select_screen.dart';
 
-class PatientHomeScreen extends StatelessWidget {
+class PatientHomeScreen extends StatefulWidget {
   const PatientHomeScreen({super.key});
+
+  @override
+  State<PatientHomeScreen> createState() => _PatientHomeScreenState();
+}
+
+class _PatientHomeScreenState extends State<PatientHomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,24 +93,29 @@ class PatientHomeScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDoctorListScreen()));
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              height: 55,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10)],
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.search, color: Colors.grey),
-                  SizedBox(width: 10),
-                  Text('Search doctor or specialty...', style: TextStyle(color: Colors.grey)),
-                ],
+          child: Container(
+            height: 55,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                )
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                // هنا سيتم كتابة لوجيك الفلترة والاستعلام من الداتابيز مستقبلاً بناءً على النص القادم في الـ value
+              },
+              decoration: const InputDecoration(
+                hintText: 'Search doctor or specialty...',
+                hintStyle: TextStyle(color: Colors.grey),
+                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 15),
               ),
             ),
           ),
@@ -105,12 +123,24 @@ class PatientHomeScreen extends StatelessWidget {
         const SizedBox(width: 15),
         GestureDetector(
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDoctorListScreen()));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PatientDoctorListScreen()),
+            );
           },
           child: Container(
             height: 55,
             width: 55,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                )
+              ],
+            ),
             child: const Icon(Icons.tune, color: Color(0xFF4A90E2)),
           ),
         )
@@ -134,9 +164,15 @@ class PatientHomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lab Results Ready', style: TextStyle(color: Color(0xFF1A394A), fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  'Lab Results Ready',
+                  style: TextStyle(color: Color(0xFF1A394A), fontWeight: FontWeight.bold, fontSize: 16),
+                ),
                 SizedBox(height: 4),
-                Text('Your blood panel results from Oct 15 are now available in records.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                Text(
+                  'Your blood panel results from Oct 15 are now available in records.',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -155,15 +191,25 @@ class PatientHomeScreen extends StatelessWidget {
       childAspectRatio: 1.4,
       children: [
         GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDoctorListScreen())),
-            child: _buildActionItem(Icons.medical_services_outlined, 'Book Appointment', Colors.blue)),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientDoctorListScreen()),
+          ),
+          child: _buildActionItem(Icons.medical_services_outlined, 'Book Appointment', Colors.blue),
+        ),
         _buildActionItem(Icons.description_outlined, 'Medical Records', Colors.blue),
         GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientChatSelectScreen())),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientChatSelectScreen()),
+          ),
           child: _buildActionItem(Icons.chat_bubble_outline, 'Chat with Doctor', Colors.blue),
         ),
         GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientEmergencyCategoryScreen())),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientEmergencyCategoryScreen()),
+          ),
           child: _buildActionItem(Icons.report_gmailerrorred_outlined, 'Emergency', Colors.red),
         ),
       ],
@@ -175,14 +221,24 @@ class PatientHomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 30),
           const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14), textAlign: TextAlign.center),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -201,7 +257,10 @@ class PatientHomeScreen extends StatelessWidget {
       itemCount: doctors.length,
       itemBuilder: (context, index) {
         return GestureDetector(
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen())),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen()),
+          ),
           child: Container(
             margin: const EdgeInsets.only(bottom: 15),
             padding: const EdgeInsets.all(12),
@@ -210,7 +269,12 @@ class PatientHomeScreen extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: const Image(image: AssetImage('assets/images/default_avatar.png'), width: 80, height: 80, fit: BoxFit.cover),
+                  child: const Image(
+                    image: AssetImage('assets/images/default_avatar.png'),
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -220,14 +284,20 @@ class PatientHomeScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(doctors[index]['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            doctors[index]['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(6)),
                             child: Row(
                               children: [
                                 const Icon(Icons.star, color: Colors.blue, size: 14),
-                                Text(doctors[index]['rating'], style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
+                                Text(
+                                  doctors[index]['rating'],
+                                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12),
+                                ),
                               ],
                             ),
                           ),
@@ -241,18 +311,25 @@ class PatientHomeScreen extends StatelessWidget {
                           RichText(
                             text: TextSpan(
                               children: [
-                                TextSpan(text: doctors[index]['price'], style: const TextStyle(color: Color(0xFF4A90E2), fontWeight: FontWeight.bold, fontSize: 16)),
+                                TextSpan(
+                                  text: doctors[index]['price'],
+                                  style: const TextStyle(color: Color(0xFF4A90E2), fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
                                 const TextSpan(text: ' /visit', style: TextStyle(color: Colors.grey, fontSize: 12)),
                               ],
                             ),
                           ),
                           ElevatedButton(
-                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen())),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen()),
+                            ),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE3F2FD),
-                                foregroundColor: const Color(0xFF4A90E2),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                              backgroundColor: const Color(0xFFE3F2FD),
+                              foregroundColor: const Color(0xFF4A90E2),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
                             child: const Text('BOOK NOW', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                           )
                         ],

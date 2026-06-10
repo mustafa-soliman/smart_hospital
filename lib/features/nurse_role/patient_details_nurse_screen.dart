@@ -1,349 +1,485 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'medication_screen.dart';
+import 'patient_history_screen.dart';
 
-class PatientDetailsNurseScreen extends StatelessWidget {
-  const PatientDetailsNurseScreen({super.key});
+class PatientDetailsNurseScreen extends StatefulWidget {
+  final String patientName;
+  final String roomNumber;
+
+  const PatientDetailsNurseScreen({
+    super.key,
+    required this.patientName,
+    required this.roomNumber,
+  });
+
+  @override
+  State<PatientDetailsNurseScreen> createState() => _PatientDetailsNurseScreenState();
+}
+
+class _PatientDetailsNurseScreenState extends State<PatientDetailsNurseScreen> {
+  String _currentStatus = 'Stable';
+  final TextEditingController _noteController = TextEditingController();
+
+  void _showUpdateStatusBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Update Status',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Select the current clinical status for ${widget.patientName}.',
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildStatusRadioOption('Stable', 'Vitals within normal range', const Color(0xFF10B981), setModalState),
+                  _buildStatusRadioOption('Needs Attention', 'Minor fluctuations in vitals', const Color(0xFFF59E0B), setModalState),
+                  _buildStatusRadioOption('Critical', 'Urgent medical intervention needed', const Color(0xFFE05858), setModalState),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF132530),
+                      minimumSize: const Size(double.infinity, 54),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Save State', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Center(
+                      child: Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusRadioOption(String title, String subtitle, Color activeColor, StateSetter setModalState) {
+    bool isSelected = _currentStatus == title;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isSelected ? const Color(0xFF007AFF) : const Color(0xFFF1F5F9), width: 1.5),
+      ),
+      child: RadioListTile<String>(
+        value: title,
+        groupValue: _currentStatus,
+        activeColor: const Color(0xFF007AFF),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F0F17))),
+        subtitle: Text(subtitle, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+        onChanged: (value) {
+          setModalState(() {
+            setState(() {
+              _currentStatus = value!;
+            });
+          });
+        },
+      ),
+    );
+  }
+
+  void _showAddNoteBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Add Note',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
+                  ),
+                  Row(
+                    children: const [
+                      Icon(Icons.access_time, color: Color(0xFF007AFF), size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        '12 Oct, 10:45 AM',
+                        style: TextStyle(color: Color(0xFF007AFF), fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${widget.patientName}  •  ${widget.roomNumber}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: TextField(
+                  controller: _noteController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'Write note here...',
+                    hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.all(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF132530),
+                  minimumSize: const Size(double.infinity, 54),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text('Save Note', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Center(
+                  child: Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBFC),
+      backgroundColor: const Color(0xFFFAFAFA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: Padding(
-          padding: EdgeInsets.all(8.r),
+          padding: const EdgeInsets.only(left: 16.0),
           child: CircleAvatar(
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFFF1F5F9),
             child: IconButton(
-              icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 18.sp),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0F0F17), size: 16),
               onPressed: () => Navigator.pop(context),
             ),
           ),
         ),
-        title: Text(
-          "Patient Details",
-          style: TextStyle(color: const Color(0xFF1B3A4B), fontWeight: FontWeight.bold, fontSize: 18.sp),
+        title: const Text(
+          'Patient Details',
+          style: TextStyle(color: Color(0xFF132530), fontWeight: FontWeight.bold, fontSize: 20),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 25.w),
-        child: Column(
-          children: [
-            SizedBox(height: 20.h),
-            Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 50.r,
-                    backgroundColor: Colors.grey[200],
-                    backgroundImage: const AssetImage('assets/images/default_avatar.png'),
-                  ),
-                  SizedBox(height: 15.h),
-                  Text(
-                    "Akram Emad",
-                    style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.door_front_door_outlined, size: 14.sp, color: Colors.grey),
-                      SizedBox(width: 5.w),
-                      Text("Room 302", style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 40.h),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Health Vitals", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
-            ),
-            SizedBox(height: 15.h),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildVitalCard(
-                    icon: Icons.favorite,
-                    iconColor: Colors.red,
-                    value: "72",
-                    unit: "bpm",
-                    label: "Heart Rate",
-                  ),
-                ),
-                SizedBox(width: 20.w),
-                Expanded(
-                  child: _buildVitalCard(
-                    icon: Icons.device_thermostat,
-                    iconColor: Colors.blue,
-                    value: "98.6",
-                    unit: "°F",
-                    label: "Temperature",
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 40.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Nurse Observations", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
-                Text("View History", style: TextStyle(color: Colors.blue, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            SizedBox(height: 15.h),
-            Container(
-              padding: EdgeInsets.all(20.r),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Patient is responsive and vitals are stable. Scheduled for physical therapy at 2 PM.",
-                    style: TextStyle(color: Colors.black87, height: 1.5, fontSize: 13.sp),
-                  ),
-                  SizedBox(height: 15.h),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 12.r,
-                        backgroundColor: Colors.blue.withValues(alpha: 0.1),
-                        child: Text("NJ", style: TextStyle(fontSize: 8.sp, fontWeight: FontWeight.bold)),
-                      ),
-                      SizedBox(width: 8.w),
-                      Text("Updated 14m ago by Nurse Jane", style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 40.h),
-            ElevatedButton(
-              onPressed: () => _showUpdateStatusSheet(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1B3A4B),
-                minimumSize: Size(double.infinity, 55.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-              ),
-              child: Text("Update Status", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16.sp)),
-            ),
-            SizedBox(height: 15.h),
-            OutlinedButton(
-              onPressed: () => _showAddNoteSheet(context),
-              style: OutlinedButton.styleFrom(
-                minimumSize: Size(double.infinity, 55.h),
-                side: BorderSide(color: Colors.blue.withValues(alpha: 0.1)),
-                backgroundColor: Colors.blue.withValues(alpha: 0.02),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-              ),
-              child: Text("Add Note", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16.sp)),
-            ),
-            SizedBox(height: 30.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVitalCard({required IconData icon, required Color iconColor, required String value, required String unit, required String label}) {
-    return Container(
-      padding: EdgeInsets.all(15.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: iconColor, size: 20.r),
-          SizedBox(height: 15.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(value, style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold)),
-              SizedBox(width: 4.w),
-              Text(unit, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
-            ],
-          ),
-          Text(label, style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateStatusSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30.r))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(25.r, 10.r, 25.r, 25.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 50.w, height: 5.h, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10.r))),
-            SizedBox(height: 20.h),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(alignment: Alignment.centerLeft, child: IconButton(onPressed: () => Navigator.pop(context), icon: Icon(Icons.close, size: 24.r))),
-                Text("Update Status", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: const Color(0xFF1B3A4B))),
-              ],
-            ),
-            SizedBox(height: 20.h),
-            Text("Select the current clinical status for Akram Emad.", style: TextStyle(color: Colors.black54, fontSize: 14.sp)),
-            SizedBox(height: 30.h),
-            _buildStatusOption(icon: Icons.check_circle, title: "Stable", subTitle: "Vitals within normal range", color: Colors.green, isSelected: true),
-            _buildStatusOption(icon: Icons.error, title: "Needs Attention", subTitle: "Minor fluctuations in vitals", color: Colors.orange, isSelected: false),
-            _buildStatusOption(icon: Icons.warning, title: "Critical", subTitle: "Urgent medical intervention needed", color: Colors.red, isSelected: false),
-            SizedBox(height: 30.h),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showSuccessAlert(context, "Status updated successfully", false);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B3A4B), minimumSize: Size(double.infinity, 60.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r))),
-              child: Text("Save State", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            ),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel", style: TextStyle(color: const Color(0xFF007BFF), fontSize: 16.sp, fontWeight: FontWeight.bold))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAddNoteSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(30.r))),
-      builder: (context) => Padding(
-        padding: EdgeInsets.fromLTRB(25.r, 10.r, 25.r, MediaQuery.of(context).viewInsets.bottom + 25.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 50.w, height: 5.h, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10.r))),
-            SizedBox(height: 25.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Add Note", style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold, color: const Color(0xFF1B3A4B))),
-                Row(
-                  children: [
-                    Icon(Icons.access_time, size: 14.sp, color: Colors.blue),
-                    SizedBox(width: 5.w),
-                    Text("12 Oct, 10:45 AM", style: TextStyle(color: Colors.blue, fontSize: 11.sp, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-            Align(alignment: Alignment.centerLeft, child: Text("Eleanor Vance • Ward 4B", style: TextStyle(color: Colors.grey, fontSize: 12.sp))),
-            SizedBox(height: 20.h),
-            TextField(
-              maxLines: 5,
-              decoration: InputDecoration(
-                hintText: "Write note here...",
-                filled: true,
-                fillColor: const Color(0xFFF8F9FA),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r), borderSide: BorderSide.none),
-              ),
-            ),
-            SizedBox(height: 25.h),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showSuccessAlert(context, "Note saved successfully", true);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B3A4B), minimumSize: Size(double.infinity, 60.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r))),
-              child: Text("Save Note", style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            ),
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Cancel", style: TextStyle(color: const Color(0xFF007BFF), fontSize: 16.sp, fontWeight: FontWeight.bold))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusOption({required IconData icon, required String title, required String subTitle, required Color color, required bool isSelected}) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 15.h),
-      padding: EdgeInsets.all(18.r),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withValues(alpha: 0.03) : Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: isSelected ? const Color(0xFF007BFF) : Colors.grey.withValues(alpha: 0.1), width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(padding: EdgeInsets.all(10.r), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 24.r)),
-          SizedBox(width: 15.w),
-          Expanded(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold)),
-                Text(subTitle, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
-              ],
-            ),
-          ),
-          Container(width: 24.r, height: 24.r, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isSelected ? const Color(0xFF007BFF) : Colors.grey[300]!, width: isSelected ? 7 : 2))),
-        ],
-      ),
-    );
-  }
-
-  void _showSuccessAlert(BuildContext context, String message, bool isNote) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        content: Container(
-          padding: EdgeInsets.all(15.r),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20.r),
-            border: isNote ? null : Border.all(color: Colors.green.withValues(alpha: 0.5), width: 1),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 5))],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(5.r),
-                    decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), shape: BoxShape.circle),
-                    child: Icon(Icons.check, color: Colors.green, size: 18.sp),
-                  ),
-                  SizedBox(width: 15.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(message, style: TextStyle(color: Colors.black, fontSize: 14.sp, fontWeight: FontWeight.bold)),
-                        if (isNote) Text("History updated in real-time", style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+                const SizedBox(height: 16),
+                Center(
+                  child: Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        )
                       ],
                     ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(55),
+                      child: const Image(
+                        image: AssetImage('assets/images/default_avatar.png'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                  IconButton(onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(), icon: Icon(Icons.close, color: Colors.grey, size: 18.sp)),
-                ],
-              ),
-              if (isNote) ...[
-                SizedBox(height: 10.h),
-                Container(height: 4.h, decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.vertical(bottom: Radius.circular(20.r)))),
-              ]
-            ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  widget.patientName,
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.domain_outlined, color: Color(0xFF64748B), size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.roomNumber,
+                      style: const TextStyle(color: Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Health Vitals',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MedicationScreen(
+                              patientName: widget.patientName,
+                              roomNumber: widget.roomNumber,
+                            ),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFF007AFF),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text(
+                        'Medication',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildVitalCard('72', 'bpm', 'Heart Rate', Icons.favorite, const Color(0xFFE05858), const Color(0xFFFDEBEB)),
+                    const SizedBox(width: 16),
+                    _buildVitalCard('98.6', '°F', 'Temperature', Icons.thermostat_rounded, const Color(0xFF007AFF), const Color(0xFFE3F2FD)),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Nurse Observations',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PatientHistoryScreen(
+                              patientName: widget.patientName,
+                              roomNumber: widget.roomNumber,
+                            ),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFF007AFF),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text(
+                        'View History',
+                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFF1F5F9), width: 1.5),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Patient is responsive and vitals are stable. Scheduled for physical therapy at 2 PM.',
+                        style: TextStyle(color: Color(0xFF334155), fontSize: 14, height: 1.5, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: const BoxDecoration(color: Color(0xFFE2E8F0), shape: BoxShape.circle),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'NJ',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Updated 14m ago by Nurse Jane',
+                            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 36),
+                ElevatedButton(
+                  onPressed: _showUpdateStatusBottomSheet,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF132530),
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Update Status',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _showAddNoteBottomSheet,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Add Note',
+                    style: TextStyle(color: Color(0xFF132530), fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVitalCard(String value, String unit, String title, IconData icon, Color color, Color bg) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.01),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  unit,
+                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
 import 'password_manager_screen.dart';
-import 'logout_Dialog.dart'; // تأكد من مطابقة اسم الملف لديك
+import 'logout_Dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,14 +17,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // خلفية بيضاء بالكامل
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 25),
           child: Column(
             children: [
               const SizedBox(height: 20),
-              // عنوان الصفحة
               const Text(
                 "My Profile",
                 style: TextStyle(
@@ -34,14 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // قسم الصورة الشخصية مع أيقونة التعديل
               Stack(
                 alignment: Alignment.bottomRight,
                 children: [
                   const CircleAvatar(
                     radius: 60,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                    backgroundImage: AssetImage('assets/images/default_avatar.png'),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -67,15 +64,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-
-              // قسم الإعدادات العامة (GENERAL)
               _buildSectionHeader("GENERAL"),
               _buildSettingItem(
                 icon: Icons.notifications_none,
                 title: "Push Notifications",
                 trailing: Switch(
                   value: isNotificationEnabled,
-                  activeColor: Colors.blue,
+                  activeThumbColor: Colors.blue,
                   onChanged: (val) => setState(() => isNotificationEnabled = val),
                 ),
               ),
@@ -84,10 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: "Language",
                 trailingText: "English",
               ),
-
               const SizedBox(height: 20),
-
-              // قسم الأمان (SECURITY)
               _buildSectionHeader("SECURITY"),
               _buildSettingItem(icon: Icons.shield_outlined, title: "Privacy Settings"),
               _buildSettingItem(
@@ -100,10 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
                 },
               ),
-
               const SizedBox(height: 30),
-
-              // زر تسجيل الخروج بتصميمه الجديد
               SizedBox(
                 width: double.infinity,
                 height: 55,
@@ -115,7 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFEBEE), // لون وردي فاتح
+                    backgroundColor: const Color(0xFFFFEBEE),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
@@ -143,11 +132,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      // تم حذف الـ bottomNavigationBar للسماح للـ MainLayout بإدارته
     );
   }
 
-  // ميثود بناء عناوين الأقسام
   Widget _buildSectionHeader(String title) {
     return Align(
       alignment: Alignment.centerLeft,
@@ -165,7 +152,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ميثود بناء عناصر القائمة بتصميم متناسق
   Widget _buildSettingItem({
     required IconData icon,
     required String title,
@@ -179,7 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.05), // خلفية زرقاء خفيفة للأيقونة
+          color: Colors.blue.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: Colors.blue, size: 22),
@@ -192,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailingText != null)
-            Text(trailingText, style: const TextStyle(color: Colors.grey)),
+            Text(trailingText, style: const TextStyle(color: Colors.grey, fontSize: 14)),
           const SizedBox(width: 5),
           const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
         ],

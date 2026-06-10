@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'schedule_doctor_screen.dart';
-import 'patients_screen.dart';
-import 'profile_screen.dart';
 
 class HomeDoctorScreen extends StatelessWidget {
-  const HomeDoctorScreen({super.key});
+  final Function(int) onNavigate;
+
+  const HomeDoctorScreen({super.key, required this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
@@ -12,87 +11,252 @@ class HomeDoctorScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   const CircleAvatar(
-                    radius: 28,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                    radius: 24,
+                    backgroundImage: AssetImage('assets/images/default_avatar.png'),
                   ),
                   const SizedBox(width: 12),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Good Morning,", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
-                      Text("Dr. Ahmed", style: TextStyle(fontSize: 16, color: Colors.grey)),
-                    ],
+                  RichText(
+                    text: const TextSpan(
+                      style: TextStyle(fontSize: 22, color: Colors.black),
+                      children: [
+                        TextSpan(text: "Good Morning, ", style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextSpan(text: "Dr.Ahmed", style: TextStyle(color: Colors.black54)),
+                      ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               Row(
                 children: [
-                  Expanded(child: _buildStatCard(title: "Total Patients", value: "1,240", icon: Icons.people_outline, color: const Color(0xFF007BFF), textColor: Colors.white)),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0073F7),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.people, color: Colors.white, size: 28),
+                          SizedBox(height: 12),
+                          Text("Total Patients", style: TextStyle(color: Color(0xFFFBFBFC), fontSize: 13)),
+                          SizedBox(height: 4),
+                          Text("1,240", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 15),
-                  Expanded(child: _buildStatCard(title: "Today's\nAppointments", value: "12", icon: Icons.calendar_today_outlined, color: Colors.white, textColor: Colors.black87, iconColor: const Color(0xFF007BFF))),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10),
+                        ],
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.calendar_today_outlined, color: Color(0xFF0073F7), size: 28),
+                          SizedBox(height: 12),
+                          Text("Today's\nAppointments", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          SizedBox(height: 4),
+                          Text("12", style: TextStyle(color: Color(0xFF0073F7), fontSize: 26, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 30),
-              const Text("Quick Actions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 25),
+              const Text(
+                "Quick Actions",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF212529)),
+              ),
               const SizedBox(height: 15),
               Row(
                 children: [
-                  Expanded(child: _buildActionCard("View\nSchedule", Icons.calendar_month, const Color(0xFFE3EBFF), const Color(0xFF1B3A4B))),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onNavigate(1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE5EDFF),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.calendar_month, color: Color(0xFF1B3A4B), size: 22),
+                            SizedBox(width: 10),
+                            Text(
+                              "View\nSchedule",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Color(0xFF1B3A4B), fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 15),
-                  Expanded(child: _buildActionCard("Messages", Icons.chat_bubble_outline, Colors.white, const Color(0xFF007BFF))),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onNavigate(3),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 10),
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.chat_bubble_outline, color: Color(0xFF0073F7), size: 22),
+                            SizedBox(width: 10),
+                            Text(
+                              "Messages",
+                              style: TextStyle(color: Color(0xFF0073F7), fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Upcoming Appointments", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text("Next 3 patients in queue", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      Text(
+                        "Upcoming Appointments",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF212529)),
+                      ),
+                      Text(
+                        "Next 3 patients in queue",
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
                     ],
                   ),
-                  TextButton(onPressed: () {}, child: const Text("View All", style: TextStyle(color: Color(0xFF007BFF), fontWeight: FontWeight.bold))),
+                  TextButton(
+                    onPressed: () => onNavigate(1),
+                    child: const Text(
+                      "View All",
+                      style: TextStyle(color: Color(0xFF0073F7), fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
                 ],
               ),
+              const SizedBox(height: 10),
+              _buildAppointmentCard(
+                name: "Akram Emad",
+                time: "09:30 AM",
+                status: "Confirmed",
+                statusColor: const Color(0xFF2DCE89),
+                statusBg: const Color(0xFFE2F7EE),
+                onNavigate: onNavigate,
+              ),
+              _buildAppointmentCard(
+                name: "Omar Reda",
+                time: "10:15 AM",
+                status: "Waiting",
+                statusColor: const Color(0xFFFFB236),
+                statusBg: const Color(0xFFFFF4E3),
+                onNavigate: onNavigate,
+              ),
+              _buildAppointmentCard(
+                name: "Ali Amer",
+                time: "11:00 AM",
+                status: "Confirmed",
+                statusColor: const Color(0xFF2DCE89),
+                statusBg: const Color(0xFFE2F7EE),
+                onNavigate: onNavigate,
+              ),
               const SizedBox(height: 15),
-              _buildAppointmentItem("Akram Emad", "09:30 AM", "Confirmed", Colors.green),
-              _buildAppointmentItem("Omar Reda", "10:15 AM", "Waiting", Colors.orange),
-              _buildAppointmentItem("Ali Amer", "11:00 AM", "Confirmed", Colors.green),
             ],
           ),
         ),
       ),
-      // تم حذف الـ bottomNavigationBar من هنا
     );
   }
 
-  Widget _buildStatCard({required String title, required String value, required IconData icon, required Color color, required Color textColor, Color? iconColor}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: iconColor ?? textColor, size: 30), const SizedBox(height: 15), Text(title, style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 13)), Text(value, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold))]),
-    );
-  }
-
-  Widget _buildActionCard(String title, IconData icon, Color bgColor, Color themeColor) {
-    return Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(18)), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: themeColor, size: 24), const SizedBox(width: 10), Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: themeColor, fontSize: 14))]));
-  }
-
-  Widget _buildAppointmentItem(String name, String time, String status, Color statusColor) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15), padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]),
-      child: Row(children: [const CircleAvatar(radius: 25, backgroundImage: NetworkImage('https://via.placeholder.com/150')), const SizedBox(width: 15), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 4), Row(children: [const Icon(Icons.access_time, size: 14, color: Colors.grey), const SizedBox(width: 5), Text(time, style: const TextStyle(color: Colors.grey, fontSize: 13))])])), Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)), child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12)))]),
+  static Widget _buildAppointmentCard({
+    required String name,
+    required String time,
+    required String status,
+    required Color statusColor,
+    required Color statusBg,
+    required Function(int) onNavigate,
+  }) {
+    return GestureDetector(
+      onTap: () => onNavigate(4),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 22,
+              backgroundImage: AssetImage('assets/images/default_avatar.png'),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF212529))),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

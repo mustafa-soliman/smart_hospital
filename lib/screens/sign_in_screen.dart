@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/sign_up_screen.dart';
 import 'package:smart_hospital/screens/forgot_password_screen.dart';
 import 'package:smart_hospital/features/doctor_role/home_doctor/ui/main_layout.dart';
-import 'package:smart_hospital/features/nurse_role/home_nurse_screen.dart';
+import 'package:smart_hospital/features/nurse_role/nurse_dashboard_wrapper.dart';
 import 'package:smart_hospital/features/patient_role/PatientMainScreen.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -49,10 +49,9 @@ class SignInScreen extends StatelessWidget {
                       } else if (userRole == 'Nurse') {
                         Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const HomeNurseScreen())
+                            MaterialPageRoute(builder: (context) => const NurseDashboardWrapper())
                         );
                       } else if (userRole == 'Patient') {
-                        // 2. التعديل هنا: نرسل المريض إلى PatientMainScreen بدلاً من الصفحة الرئيسية المجردة
                         Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(builder: (context) => const PatientMainScreen())
