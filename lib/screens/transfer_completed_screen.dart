@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-// استيراد صفحة الملاحة لربطها بالزر
 import 'package:smart_hospital/screens/navigation_screen.dart';
 
 class TransferCompletedScreen extends StatelessWidget {
-  const TransferCompletedScreen({super.key});
+  final String caseId;
+
+  const TransferCompletedScreen({
+    super.key,
+    required this.caseId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,27 +15,19 @@ class TransferCompletedScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // الخلفية الموحدة للمشروع
           Image.asset(
             'assets/images/hospital_bg.png',
             fit: BoxFit.cover,
           ),
           Container(color: Colors.white.withOpacity(0.4)),
-
           SafeArea(
             child: Column(
               children: [
                 const SizedBox(height: 20),
                 _buildHeader(context),
-
                 const Spacer(flex: 1),
-
-                // أيقونة النجاح المعتمدة في التصميم
                 _buildSuccessIcon(),
-
                 const SizedBox(height: 40),
-
-                // نص التأكيد الموضح في صورتك
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40),
                   child: Text(
@@ -41,23 +37,20 @@ class TransferCompletedScreen extends StatelessWidget {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1B3A4B),
-                      height: 1.4,
                     ),
                   ),
                 ),
-
                 const Spacer(flex: 2),
-
-                // زر الانتقال إلى صفحة الملاحة (Navigation)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                  padding: const EdgeInsets.only(left: 30, right: 30, bottom: 30),
                   child: ElevatedButton(
                     onPressed: () {
-                      // الربط المطلوب: الانتقال لصفحة Navigation التي تم إنشاؤها سابقاً
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => NavigationScreen(),
+                          builder: (context) => NavigationScreen(
+                            caseId: caseId,
+                          ),
                         ),
                       );
                     },
@@ -65,10 +58,10 @@ class TransferCompletedScreen extends StatelessWidget {
                       backgroundColor: const Color(0xFF1B3A4B),
                       minimumSize: const Size(double.infinity, 60),
                       shape: const StadiumBorder(),
-                      elevation: 5,
+                      elevation: 4,
                     ),
                     child: const Text(
-                      'Next',
+                      'Go to Navigation',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -122,7 +115,11 @@ class TransferCompletedScreen extends StatelessWidget {
         shape: BoxShape.circle,
         color: Color(0xFF0D638F),
       ),
-      child: const Icon(Icons.check, color: Colors.white, size: 60),
+      child: const Icon(
+        Icons.check,
+        color: Colors.white,
+        size: 60,
+      ),
     );
   }
 }

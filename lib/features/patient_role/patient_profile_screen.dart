@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_hospital/screens/role_selection_screen.dart';
 import 'edit_profile_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -6,8 +7,54 @@ import 'settings_screen.dart';
 import 'favorite_doctors_screen.dart';
 import 'widgets/custom_popups.dart';
 
-class PatientProfileScreen extends StatelessWidget {
+class PatientProfileScreen extends StatefulWidget {
   const PatientProfileScreen({super.key});
+
+  @override
+  State<PatientProfileScreen> createState() => _PatientProfileScreenState();
+}
+
+class _PatientProfileScreenState extends State<PatientProfileScreen> {
+  final _supabase = Supabase.instance.client;
+  bool _isLoading = true;
+  String _patientName = 'Patient';
+  String _patientEmail = '';
+  String? _avatarUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPatientProfileData();
+  }
+
+  // جلب بيانات بروفايل المريض الحقيقية لايف من السيرفر
+  Future<void> _fetchPatientProfileData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        _patientEmail = user.email ?? '';
+
+        final data = await _supabase
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (data != null) {
+          setState(() {
+            _patientName = data['full_name'] ?? 'Patient';
+            _avatarUrl = data['avatar_url'];
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+      setState(() => _isLoading = false);
+    } catch (e) {
+      debugPrint("Error loading patient profile: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +62,9 @@ class PatientProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A394A)))
+          : SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -30,7 +79,9 @@ class PatientProfileScreen extends StatelessWidget {
                         CircleAvatar(
                           radius: screenWidth * 0.12,
                           backgroundColor: Colors.grey.shade200,
-                          backgroundImage: const AssetImage('assets/images/default_avatar.png'),
+                          backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                              ? NetworkImage(_avatarUrl!)
+                              : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                         ),
                         Positioned(
                           bottom: 0,
@@ -38,26 +89,33 @@ class PatientProfileScreen extends StatelessWidget {
                           child: CircleAvatar(
                             radius: 15,
                             backgroundColor: const Color(0xFF1A394A),
-                            child: const Icon(Icons.edit, color: Colors.white, size: 14),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                              onPressed: () {
+                                // يمكن إضافة لوجيك رفع الصورة هنا لاحقاً
+                              },
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Mostafa Mohamed',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1A394A)),
+                    const SizedBox(height: 15),
+                    Text(
+                      _patientName,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A394A)),
                     ),
-                    const Text(
-                      'mostafa.dev@gmail.com',
-                      style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
+                    const SizedBox(height: 5),
+                    Text(
+                      _patientEmail,
+                      style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
 
-
+              // خيارات القائمة المربوطة بصفحاتك الحقيقية
               _buildMenuOption(
                 context,
                 icon: Icons.person_outline,
@@ -71,24 +129,12 @@ class PatientProfileScreen extends StatelessWidget {
               ),
               _buildMenuOption(
                 context,
-                icon: Icons.favorite_border_rounded,
+                icon: Icons.favorite_border,
                 title: 'Favorite Doctors',
                 onTap: () {
-                  // 👈 تم الربط هنا لفتح صفحة المفضلة بنجاح
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const FavoriteDoctorsScreen()),
-                  );
-                },
-              ),
-              _buildMenuOption(
-                context,
-                icon: Icons.settings_outlined,
-                title: 'Settings',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
                   );
                 },
               ),
@@ -103,48 +149,40 @@ class PatientProfileScreen extends StatelessWidget {
                   );
                 },
               ),
-
-              const SizedBox(height: 20),
-
-              // زر تسجيل الخروج
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.red.shade50),
-                ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.logout_rounded, color: Colors.red, size: 20),
-                  ),
-                  title: const Text(
-                    'Logout',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red),
-                  ),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.red),
-                  onTap: () {
-                    CustomPopups.showLogoutPopup(
-                      context,
-                      onConfirm: () {
-                        Navigator.pop(context); // إغلاق الـ Popup أولاً
-
-                        // 👈 طرد المستخدم لصفحة اختيار الرتب ومسح الـ Stack بالكامل لمنع الرجوع خلفاً
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
-                              (route) => false,
-                        );
-                      },
-                    );
-                  },
-                ),
+              _buildMenuOption(
+                context,
+                icon: Icons.settings_outlined,
+                title: 'Settings',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
               ),
+              const SizedBox(height: 30),
+
+              // زر تسجيل الخروج الآمن المربوط بالـ PopUp بتاعك
+              _buildMenuOption(
+                context,
+                icon: Icons.logout,
+                title: 'Logout',
+                onTap: () {
+                  CustomPopups.showLogoutPopup(
+                    context,
+                    onConfirm: () async {
+                      await _supabase.auth.signOut();
+                      if (!mounted) return;
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RoleSelectionScreen()),
+                            (route) => false,
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -161,17 +199,17 @@ class PatientProfileScreen extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: ListTile(
+        onTap: onTap,
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1A394A).withValues(alpha: 0.06),
+            color: const Color(0xFF1A394A).withOpacity(0.06),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: const Color(0xFF1A394A), size: 20),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1A394A))),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
-        onTap: onTap,
+        trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
       ),
     );
   }

@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
-// استيراد صفحة النجاح ليتمكن الكود من الانتقال إليها
 import 'package:smart_hospital/screens/request_success_popup.dart';
 
-class ContactAdminScreen extends StatelessWidget {
+class ContactAdminScreen extends StatefulWidget {
   const ContactAdminScreen({super.key});
+
+  @override
+  State<ContactAdminScreen> createState() => _ContactAdminScreenState();
+}
+
+class _ContactAdminScreenState extends State<ContactAdminScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,11 +27,11 @@ class ContactAdminScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // تعريف الباك جراوند في الكود
           Image.asset('assets/images/hospital_bg.png', fit: BoxFit.cover),
           Container(color: Colors.white.withOpacity(0.3)),
           SafeArea(
             child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Column(
@@ -36,16 +52,20 @@ class ContactAdminScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                     ),
                     const SizedBox(height: 40),
-                    _buildField('Name', 'Enter your Name', Icons.person_outline),
+                    _buildField('Name', 'Enter your Name', Icons.person_outline, _nameController),
                     const SizedBox(height: 20),
-                    _buildField('Phone', 'Enter your Phone Number', Icons.phone_outlined),
+                    _buildField('Phone', 'Enter your Phone Number', Icons.phone_outlined, _phoneController),
                     const SizedBox(height: 20),
-                    _buildField('Message', 'Write your request or note', Icons.chat_bubble_outline, maxLines: 4),
+                    _buildField('Message', 'Write your request or note', Icons.chat_bubble_outline, _messageController, maxLines: 4),
                     const SizedBox(height: 40),
-
-                    // الزر الذي ينقلك لصفحة النجاح
                     ElevatedButton(
                       onPressed: () {
+                        if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please fill in required fields')),
+                          );
+                          return;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const RequestSuccessPopup()),
@@ -61,6 +81,7 @@ class ContactAdminScreen extends StatelessWidget {
                         style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -71,13 +92,14 @@ class ContactAdminScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildField(String label, String hint, IconData icon, {int maxLines = 1}) {
+  Widget _buildField(String label, String hint, IconData icon, TextEditingController controller, {int maxLines = 1}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B))),
         const SizedBox(height: 10),
         TextField(
+          controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,

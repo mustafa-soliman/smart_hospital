@@ -26,38 +26,47 @@ class PasswordManagerScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(25),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildPasswordSlot("Current Password"),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {},
-                child: const Text("Forgot Password ?", style: TextStyle(color: Color(0xFFE57373), fontWeight: FontWeight.bold)),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(25),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPasswordSlot("Current Password"),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text("Forgot Password ?", style: TextStyle(color: Color(0xFFE57373), fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildPasswordSlot("New Password"),
+                    const SizedBox(height: 20),
+                    _buildPasswordSlot("Confirm New Password"),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 10),
-            _buildPasswordSlot("New Password"),
-            const SizedBox(height: 20),
-            _buildPasswordSlot("Confirm New Password"),
-            const SizedBox(height: 60),
-
-            // Change Password Button
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B3A4B),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)), // Fully rounded like image
-                ),
-                child: const Text(
-                  "Change Password",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            Padding(
+              padding: const EdgeInsets.all(25.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B3A4B),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    "Change Password",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               ),
             ),

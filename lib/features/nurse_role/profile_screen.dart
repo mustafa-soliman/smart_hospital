@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'edit_profile_screen.dart';
 import 'logout_dialog.dart';
 import 'password_manager_screen.dart';
@@ -13,9 +14,53 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _pushNotifications = true;
+  bool _isLoading = true;
+  Map<String, dynamic>? _nurseProfile;
+  final _supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNurseData();
+  }
+
+  // جلب بيانات الممرضة الحقيقية لايف لعرضها في البروفايل
+  Future<void> _fetchNurseData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        final data = await _supabase
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+
+        setState(() {
+          _nurseProfile = data;
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint("Error fetching nurse profile in screen: $e");
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF132530))),
+      );
+    }
+
+    // قراءة البيانات المجلوبة أو وضع قيم افتراضية لو مش موجودة
+    final String nurseName = _nurseProfile?['full_name'] ?? 'Nurse';
+    final String nurseEmail = _supabase.auth.currentUser?.email ?? 'nurse@hospital.com';
+    final String? avatarUrl = _nurseProfile?['avatar_url'];
+
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
@@ -30,11 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Center(
                   child: Text(
                     'My Profile',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF132530),
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF132530)),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -45,17 +86,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            )
+                            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 6))
                           ],
                         ),
-                        child: const CircleAvatar(
+                        child: CircleAvatar(
                           radius: 50,
-                          backgroundColor: Color(0xFFF1F5F9),
-                          backgroundImage: AssetImage('assets/images/default_avatar.png'),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                              ? NetworkImage(avatarUrl)
+                              : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
                         ),
                       ),
                       Positioned(
@@ -63,15 +102,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         right: 0,
                         child: GestureDetector(
                           onTap: () {
+                            // الانتقال لتعديل البروفايل وتمرير البيانات الحقيقية
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EditProfileScreen(
                                   initialData: EditProfileModel(
-                                    name: 'Ahmed',
-                                    email: 'mustafa@gmail.com',
-                                    phoneNumber: '1234567890',
-                                    dateOfBirth: '01/01/2000',
+                                    name: nurseName,
+                                    email: nurseEmail,
+                                    phoneNumber: _nurseProfile?['phone_number'] ?? '',
+                                    dateOfBirth: _nurseProfile?['date_of_birth'] ?? '',
+                                    imageUrl: avatarUrl,
                                   ),
                                 ),
                               ),
@@ -88,25 +129,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Center(
+                Center(
                   child: Text(
-                    'Ahmed',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0F172A),
-                    ),
+                    nurseName,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                   ),
                 ),
                 const SizedBox(height: 32),
                 const Text(
                   'GENERAL',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF94A3B8),
-                    letterSpacing: 0.5,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.5),
                 ),
                 const SizedBox(height: 12),
                 _buildMenuSwitchTile(
@@ -125,12 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 32),
                 const Text(
                   'SECURITY',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF94A3B8),
-                    letterSpacing: 0.5,
-                  ),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.5),
                 ),
                 const SizedBox(height: 12),
                 _buildMenuNavigationTile(
@@ -143,12 +170,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (context) => PrivacyPolicyScreen(
                           data: PrivacyPolicyModel(
                             lastUpdate: 'June 2026',
-                            privacyParagraphs: [
-                              'We value your privacy and protect your personal hospital data.',
-                            ],
-                            termsConditions: [
-                              'Use the application according to the hospital guidelines.',
-                            ],
+                            privacyParagraphs: ['We value your privacy and protect your personal hospital data.'],
+                            termsConditions: ['Use the application according to the hospital guidelines.'],
                           ),
                         ),
                       ),
@@ -160,37 +183,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.lock_open_rounded,
                   title: 'Change Password',
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PasswordManagerScreen(),
-                      ),
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const PasswordManagerScreen()));
                   },
                 ),
                 const SizedBox(height: 40),
+
+                // زرار الـ Logout المربوط بالـ Dialog اللي إنت عامله
                 GestureDetector(
                   onTap: () => LogoutDialog.show(context),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFEAEA),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
+                    decoration: BoxDecoration(color: const Color(0xFFFFEAEA), borderRadius: BorderRadius.circular(24)),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.logout_rounded, color: Color(0xFFE05858), size: 20),
                         SizedBox(width: 8),
-                        Text(
-                          'Logout',
-                          style: TextStyle(
-                            color: Color(0xFFE05858),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        Text('Logout', style: TextStyle(color: Color(0xFFE05858), fontSize: 16, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
@@ -212,10 +222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
           Container(
@@ -224,12 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Icon(icon, color: const Color(0xFF64748B), size: 22),
           ),
           const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF0F172A)),
-            ),
-          ),
+          Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF0F172A)))),
           Switch(
             value: value,
             onChanged: onChanged,
@@ -252,10 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(20)),
         child: Row(
           children: [
             Container(
@@ -264,17 +263,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Icon(icon, color: const Color(0xFF64748B), size: 22),
             ),
             const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF0F172A)),
-              ),
-            ),
-            if (trailingText != null)
-              Text(
-                trailingText,
-                style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w500),
-              ),
+            Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Color(0xFF0F172A)))),
+            if (trailingText != null) Text(trailingText, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w500)),
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 16),
           ],

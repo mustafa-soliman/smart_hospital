@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_hospital/features/patient_role/patient_doctor_list_screen.dart';
 import 'package:smart_hospital/features/patient_role/patient_doctor_details_screen.dart';
 import 'package:smart_hospital/features/patient_role/patient_emergency_category_screen.dart';
@@ -13,11 +14,85 @@ class PatientHomeScreen extends StatefulWidget {
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final _supabase = Supabase.instance.client;
+
+  bool _isLoading = true;
+  String _patientName = 'Patient';
+  String? _avatarUrl;
+  List<Map<String, dynamic>> _allDoctors = [];
+  List<Map<String, dynamic>> _filteredDoctors = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPatientHomeData();
+    _searchController.addListener(_onSearchChanged);
+  }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim().toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredDoctors = _allDoctors;
+      } else {
+        _filteredDoctors = _allDoctors.where((doctor) {
+          final name = (doctor['name'] ?? '').toString().toLowerCase();
+          final specialty = (doctor['specialty'] ?? '').toString().toLowerCase();
+          return name.contains(query) || specialty.contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  Future<void> _fetchPatientHomeData() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        final profileData = await _supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileData != null) {
+          _patientName = profileData['full_name'] ?? 'Patient';
+          _avatarUrl = profileData['avatar_url'];
+        }
+      }
+
+      final doctorsData = await _supabase
+          .from('doctors')
+          .select('id, specialization, license_number, status, profiles(full_name, avatar_url)');
+
+      List<Map<String, dynamic>> loadedDoctors = [];
+      for (var doc in doctorsData) {
+        final profile = doc['profiles'];
+        loadedDoctors.add({
+          'id': doc['id'],
+          'name': profile != null ? profile['full_name'] ?? 'Dr. Unknown' : 'Dr. Unknown',
+          'specialty': doc['specialization'] ?? 'General Practitioner',
+          'price': '300EGP',
+          'rating': '5.0',
+          'avatar_url': profile != null ? profile['avatar_url'] : null,
+        });
+      }
+
+      setState(() {
+        _allDoctors = loadedDoctors;
+        _filteredDoctors = loadedDoctors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading patient home data: $e");
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -25,7 +100,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A394A)))
+            : SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,19 +142,21 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       children: [
         Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 28,
-              backgroundImage: AssetImage('assets/images/default_avatar.png'),
+              backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                  ? NetworkImage(_avatarUrl!)
+                  : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
             ),
             const SizedBox(width: 12),
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, Ahmed',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  'Hello, $_patientName',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                Text(
+                const Text(
                   'How are you feeling today?',
                   style: TextStyle(color: Colors.grey, fontSize: 14),
                 ),
@@ -107,9 +186,6 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
             ),
             child: TextField(
               controller: _searchController,
-              onChanged: (value) {
-                // هنا سيتم كتابة لوجيك الفلترة والاستعلام من الداتابيز مستقبلاً بناءً على النص القادم في الـ value
-              },
               decoration: const InputDecoration(
                 hintText: 'Search doctor or specialty...',
                 hintStyle: TextStyle(color: Colors.grey),
@@ -245,21 +321,28 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   }
 
   Widget _buildDoctorsList(BuildContext context) {
-    final List<Map<String, dynamic>> doctors = [
-      {'name': 'Dr. Hamza Ahmed', 'specialty': 'Cardiologist • Heart Center', 'price': '200EGP', 'rating': '4.9'},
-      {'name': 'Dr. Ahmed Ali', 'specialty': 'Neurologist • Brain Health Clinic', 'price': '250EGP', 'rating': '4.8'},
-      {'name': 'Dr. Ali Eid', 'specialty': 'Dentist • Smile Studio', 'price': '300EGP', 'rating': '5.0'},
-    ];
+    if (_filteredDoctors.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text("No doctors match your search.", style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
 
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: doctors.length,
+      itemCount: _filteredDoctors.length,
       itemBuilder: (context, index) {
+        final doctor = _filteredDoctors[index];
+        final String docId = doctor['id'];
+        final String? docAvatar = doctor['avatar_url'];
+
         return GestureDetector(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen()),
+            MaterialPageRoute(builder: (context) => PatientDoctorDetailsScreen(doctorId: docId)),
           ),
           child: Container(
             margin: const EdgeInsets.only(bottom: 15),
@@ -269,7 +352,14 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: const Image(
+                  child: docAvatar != null && docAvatar.isNotEmpty
+                      ? Image.network(
+                    docAvatar,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  )
+                      : const Image(
                     image: AssetImage('assets/images/default_avatar.png'),
                     width: 80,
                     height: 80,
@@ -285,7 +375,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            doctors[index]['name'],
+                            doctor['name'],
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           Container(
@@ -295,7 +385,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                               children: [
                                 const Icon(Icons.star, color: Colors.blue, size: 14),
                                 Text(
-                                  doctors[index]['rating'],
+                                  doctor['rating'],
                                   style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12),
                                 ),
                               ],
@@ -303,7 +393,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           ),
                         ],
                       ),
-                      Text(doctors[index]['specialty'], style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                      Text(doctor['specialty'], style: const TextStyle(color: Colors.grey, fontSize: 13)),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -312,7 +402,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: doctors[index]['price'],
+                                  text: doctor['price'],
                                   style: const TextStyle(color: Color(0xFF4A90E2), fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 const TextSpan(text: ' /visit', style: TextStyle(color: Colors.grey, fontSize: 12)),
@@ -322,7 +412,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           ElevatedButton(
                             onPressed: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const PatientDoctorDetailsScreen()),
+                              MaterialPageRoute(builder: (context) => PatientDoctorDetailsScreen(doctorId: docId)),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE3F2FD),

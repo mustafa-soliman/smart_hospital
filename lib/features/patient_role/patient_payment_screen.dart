@@ -1,14 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_hospital/features/patient_role/payment_status_popup.dart';
+
 class PatientPaymentScreen extends StatefulWidget {
-  const PatientPaymentScreen({super.key});
+  final String doctorId;
+  final String appointmentDate;
+  final String appointmentTime;
+
+  const PatientPaymentScreen({
+    super.key,
+    required this.doctorId,
+    required this.appointmentDate,
+    required this.appointmentTime,
+  });
 
   @override
   State<PatientPaymentScreen> createState() => _PatientPaymentScreenState();
 }
 
 class _PatientPaymentScreenState extends State<PatientPaymentScreen> {
-  int selectedMethod = 2;
+  int selectedMethod = 0;
+  bool _isProcessing = false;
+  final _supabase = Supabase.instance.client;
+
+  Future<void> _processAppointmentPayment() async {
+    setState(() => _isProcessing = true);
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) throw 'User not authenticated';
+
+      final patientData = await _supabase
+          .from('patients')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+      final actualPatientId = patientData['id'];
+
+      await _supabase.from('appointments').insert({
+        'patient_id': actualPatientId,
+        'doctor_id': widget.doctorId,
+        'appointment_date': widget.appointmentDate,
+        'appointment_time': widget.appointmentTime,
+        'status': 'pending',
+        'type': 'online',
+      });
+
+      if (!mounted) return;
+      showPaymentStatusDialog(context, true);
+    } catch (e) {
+      debugPrint("Payment/Booking Error: $e");
+      if (mounted) {
+        showPaymentStatusDialog(context, false);
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +65,7 @@ class _PatientPaymentScreenState extends State<PatientPaymentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -24,77 +73,121 @@ class _PatientPaymentScreenState extends State<PatientPaymentScreen> {
         title: const Text('Payment', style: TextStyle(color: Color(0xFF1A394A), fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('STATEMENT TOTAL', style: TextStyle(color: Colors.grey, fontSize: 12)),
-            const Text('300.00Eg', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1A394A))),
-            const SizedBox(height: 20),
-            _buildInfoBanner(),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Select Payment Method', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text('ADD NEW')),
-              ],
-            ),
-            const SizedBox(height: 15),
-            _buildPaymentTile(0, 'Apple Pay', 'Fast and secure', Icons.apple),
-            _buildPaymentTile(1, 'Visa •••• 4242', 'Expires 09/25', Icons.credit_card),
-            _buildPaymentTile(2, 'Health Insurance', 'Aetna - Policy #8812', Icons.health_and_safety_outlined),
-
-            const SizedBox(height: 30),
-            _buildFeeRow('Service Fee', '00.0'),
-            _buildFeeRow('Hospital Tax', '00.0'),
-            const SizedBox(height: 25),
-            _buildPayButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoBanner() {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: const Color(0xFFE3F2FD).withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12)),
-      child: const Row(
+      body: Column(
         children: [
-          Icon(Icons.info, color: Colors.blue, size: 20),
-          SizedBox(width: 10),
-          Expanded(child: Text('Includes consultation and lab diagnostics for patient #0429.', style: TextStyle(color: Colors.blue, fontSize: 13))),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('STATEMENT TOTAL', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const Text('300.00Eg', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF1A394A))),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F4F7).withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.blue, size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Includes consultation and lab diagnostics for patient #0429.',
+                            style: TextStyle(color: Colors.grey, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Select Payment Method', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A394A))),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('ADD NEW', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 14)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 15),
+                  _buildPaymentMethodTile(0, 'assets/images/apple_pay.png', 'Apple Pay', 'Fast and secure'),
+                  _buildPaymentMethodTile(1, 'assets/images/visa.png', 'Visa •••• 4242', 'Expires 09/25'),
+                  _buildPaymentMethodTile(2, 'assets/images/insurance.png', 'Health Insurance', 'Aetna - Policy #8812'),
+                  const SizedBox(height: 25),
+                  _buildFeeRow('Service Fee', '00.0'),
+                  _buildFeeRow('Hospital Tax', '00.0'),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isProcessing ? null : _processAppointmentPayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A394A),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 0,
+                ),
+                child: _isProcessing
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock, color: Colors.white, size: 18),
+                    SizedBox(width: 10),
+                    Text('Pay300.00Eg', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPaymentTile(int index, String title, String subtitle, IconData icon) {
-    bool isSelected = selectedMethod == index;
+  Widget _buildPaymentMethodTile(int methodIndex, String imagePath, String title, String subtitle) {
+    bool isSelected = selectedMethod == methodIndex;
     return GestureDetector(
-      onTap: () => setState(() => selectedMethod = index),
+      onTap: () => setState(() => selectedMethod = methodIndex),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? Colors.blue : Colors.grey.withValues(alpha: 0.2), width: 2),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? Colors.blue : Colors.grey.shade200, width: 1.5),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 30),
-            const SizedBox(width: 15),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
+            Container(
+              width: 45,
+              height: 45,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F4F7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.credit_card, color: Color(0xFF1A394A)),
             ),
-            const Spacer(),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
             Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isSelected ? Colors.blue : Colors.grey),
           ],
         ),
@@ -104,28 +197,12 @@ class _PatientPaymentScreenState extends State<PatientPaymentScreen> {
 
   Widget _buildFeeRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(label, style: const TextStyle(color: Colors.grey)), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))],
-      ),
-    );
-  }
-
-  Widget _buildPayButton() {
-    return ElevatedButton(
-      onPressed: () => showPaymentStatusDialog(context, true),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF1A394A),
-        minimumSize: const Size(double.infinity, 60),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock, color: Colors.white, size: 18),
-          SizedBox(width: 10),
-          Text('Pay 300.00Eg', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
         ],
       ),
     );

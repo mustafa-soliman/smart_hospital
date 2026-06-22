@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-// استيراد صفحة قبول الحالة للربط التلقائي
 import 'package:smart_hospital/screens/case_accepted_screen.dart';
+import 'package:smart_hospital/screens/case_rejected_screen.dart';
 
 class WaitingResponsePopup extends StatefulWidget {
-  const WaitingResponsePopup({super.key});
+  final bool simulateAcceptance;
+  final String caseId;
+
+  const WaitingResponsePopup({
+    super.key,
+    required this.caseId,
+    this.simulateAcceptance = true,
+  });
 
   @override
   State<WaitingResponsePopup> createState() => _WaitingResponsePopupState();
@@ -15,13 +22,29 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
   @override
   void initState() {
     super.initState();
-    // مؤقت لمحاكاة انتظار رد المستشفى (ينتقل بعد 4 ثوانٍ)
     Timer(const Duration(seconds: 4), () {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CaseAcceptedScreen()),
-        );
+        if (widget.simulateAcceptance) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CaseAcceptedScreen(
+                bedNumber: '14',
+                floor: '3',
+                department: 'Emergency',
+                hospitalName: 'SHH',
+                caseId: widget.caseId,
+              ),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CaseRejectedScreen(caseId: widget.caseId),
+            ),
+          );
+        }
       }
     });
   }
@@ -29,7 +52,6 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // خلفية بيضاء سادة للتركيز على محتوى النافذة
       backgroundColor: Colors.white,
       body: Center(
         child: Padding(
@@ -37,7 +59,7 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
           child: Container(
             padding: const EdgeInsets.all(35),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F1F1), // اللون الرمادي الفاتح للنافذة
+              color: const Color(0xFFF1F1F1),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -50,7 +72,6 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // أيقونة التحميل المخصصة (Circular Progress)
                 const SizedBox(
                   width: 60,
                   height: 60,
@@ -59,10 +80,7 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
                     strokeWidth: 5,
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // عنوان الحالة
                 const Text(
                   'Waiting for Response',
                   textAlign: TextAlign.center,
@@ -72,10 +90,7 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
                     color: Color(0xFF1B3A4B),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // نص التوضيح من التصميم الخاص بك
                 const Text(
                   'The hospital is reviewing the case.\nYou will be notified once a bed is\nconfirmed or if the hospital cannot\nreceive the case.',
                   textAlign: TextAlign.center,
@@ -85,7 +100,6 @@ class _WaitingResponsePopupState extends State<WaitingResponsePopup> {
                     height: 1.5,
                   ),
                 ),
-
                 const SizedBox(height: 10),
               ],
             ),

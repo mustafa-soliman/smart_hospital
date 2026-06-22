@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_hospital/screens/splash_screen.dart';
 import 'package:smart_hospital/features/doctor_role/home_doctor/ui/main_layout.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://qzddnwbblnsfpmyomrso.supabase.co',
+    publishableKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRud2JibG5zZnBteW9tcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNDI3NzIsImV4cCI6MjA5NjkxODc3Mn0.vnjbMYInnyuLhJNDzB1m7jzlnqx5OHpcb2_KRCQyrPI',
+  );
+
   runApp(const SmartHayatHospitalApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class SmartHayatHospitalApp extends StatelessWidget {
   const SmartHayatHospitalApp({super.key});

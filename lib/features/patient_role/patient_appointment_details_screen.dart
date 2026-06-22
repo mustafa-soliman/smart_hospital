@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:smart_hospital/features/patient_role/cancel_appointment_dialog.dart';
-import 'package:smart_hospital/features/patient_role/patient_book_appointment_screen.dart';
 
 class PatientAppointmentDetailsScreen extends StatelessWidget {
-  const PatientAppointmentDetailsScreen({super.key});
+  final String doctorName;
+  final String specialization;
+  final String appointmentDate;
+  final String appointmentTime;
+  final String status;
+  final String? avatarUrl;
+
+  const PatientAppointmentDetailsScreen({
+    super.key,
+    required this.doctorName,
+    required this.specialization,
+    required this.appointmentDate,
+    required this.appointmentTime,
+    required this.status,
+    this.avatarUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
+    bool isConfirmed = status.toLowerCase() == 'confirmed';
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
@@ -36,75 +52,50 @@ class PatientAppointmentDetailsScreen extends StatelessWidget {
             _buildDoctorCard(),
             const SizedBox(height: 30),
             const Text(
-              'APPOINTMENT INFO',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.1,
-              ),
+              'APPOINTMENT INFORMATION',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5),
             ),
             const SizedBox(height: 15),
-            _buildInfoSection(),
-            const SizedBox(height: 30),
-            const Text(
-              'NOTES',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.1,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10)],
               ),
-            ),
-            const SizedBox(height: 15),
-            _buildNotesCard(),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PatientBookAppointmentScreen(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF007BFF),
-                minimumSize: const Size(double.infinity, 60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                elevation: 0,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
                 children: [
-                  Icon(Icons.calendar_month_outlined, color: Colors.white),
-                  SizedBox(width: 10),
-                  Text(
-                    'Reschedule',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  _buildInfoRow(Icons.calendar_today_outlined, 'Date', appointmentDate),
+                  const Divider(height: 30, thickness: 0.5),
+                  _buildInfoRow(Icons.access_time, 'Time', appointmentTime),
+                  const Divider(height: 30, thickness: 0.5),
+                  _buildInfoRow(
+                    Icons.check_circle_outline,
+                    'Status',
+                    status.toUpperCase(),
+                    textColor: isConfirmed ? Colors.green : Colors.orange,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  showCancelAppointmentDialog(context);
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Cancel Appointment',
-                      style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+            const SizedBox(height: 25),
+            _buildNotesCard(),
+            const SizedBox(height: 40),
+            if (isConfirmed)
+              ElevatedButton(
+                onPressed: () => showCancelAppointmentDialog(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFEAEA),
+                  foregroundColor: const Color(0xFFC62828),
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Cancel Appointment',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -113,150 +104,70 @@ class PatientAppointmentDetailsScreen extends StatelessWidget {
 
   Widget _buildDoctorCard() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 30),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: const Image(
-                  image: AssetImage('assets/images/default_avatar.png'),
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0061C4),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.star, color: Colors.white, size: 10),
-                    SizedBox(width: 2),
-                    Text(
-                      '5',
-                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: avatarUrl != null && avatarUrl!.isNotEmpty
+                ? Image.network(avatarUrl!, width: 70, height: 70, fit: BoxFit.cover)
+                : const Image(image: AssetImage('assets/images/default_avatar.png'), width: 70, height: 70, fit: BoxFit.cover),
           ),
-          const SizedBox(height: 15),
-          const Text(
-            'Dr.Ali Eid',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A394A)),
-          ),
-          const SizedBox(height: 5),
-          const Text(
-            'Dentist',
-            style: TextStyle(color: Color(0xFF007BFF), fontWeight: FontWeight.w500),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doctorName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1A394A)),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  specialization,
+                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500, fontSize: 14),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F4F7).withOpacity(0.6),
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow(Icons.calendar_today_outlined, 'Date', 'Tuesday, Oct 24, 2023'),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 15),
-            child: Divider(height: 1, color: Colors.white),
-          ),
-          _buildInfoRow(Icons.access_time, 'Time', '10:30 AM'),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 15),
-            child: Divider(height: 1, color: Colors.white),
-          ),
-          Row(
-            children: [
-              _buildIconCircle(Icons.account_balance_wallet_outlined),
-              const SizedBox(width: 15),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Payment Status', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  SizedBox(height: 4),
-                  Text('Paid', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1A394A))),
-                ],
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Color(0xFF2E7D32), size: 14),
-                    SizedBox(width: 5),
-                    Text(
-                      'SUCCESS',
-                      style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold, fontSize: 10),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(IconData icon, String label, String value, {Color? textColor}) {
     return Row(
       children: [
-        _buildIconCircle(icon),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F4F7),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: const Color(0xFF007BFF), size: 20),
+        ),
         const SizedBox(width: 15),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1A394A))),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: textColor ?? const Color(0xFF1A394A),
+                fontSize: 15,
+              ),
+            ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildIconCircle(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(icon, color: const Color(0xFF007BFF), size: 22),
     );
   }
 
@@ -266,12 +177,22 @@ class PatientAppointmentDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFF1F4F7)),
       ),
-      child: Text(
-        'Please bring your previous medical records and insurance card for the consultation.',
-        style: TextStyle(color: Colors.grey[700], height: 1.5, fontSize: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text(
+            'Clinical Notes',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1A394A), fontSize: 15),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Please bring your latest electronic medical report and arrive 15 minutes before the scheduled block time.',
+            style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
+          ),
+        ],
       ),
     );
   }

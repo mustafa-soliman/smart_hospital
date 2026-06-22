@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/screens/nearby_hospital_screen.dart';
 
 class CaseRejectedScreen extends StatelessWidget {
-  const CaseRejectedScreen({super.key});
+  final String caseId;
+
+  const CaseRejectedScreen({super.key, required this.caseId});
 
   @override
   Widget build(BuildContext context) {
@@ -10,21 +12,17 @@ class CaseRejectedScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. استدعاء الخلفية الموحدة hospital_bg.png
           Image.asset(
             'assets/images/hospital_bg.png',
             fit: BoxFit.cover,
           ),
-          // طبقة شفافة لتحسين وضوح العناصر
           Container(color: Colors.white.withOpacity(0.3)),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  // زر الرجوع العلوي
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
@@ -35,49 +33,34 @@ class CaseRejectedScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // عنوان الصفحة
                   const Text(
                     'Case Rejected',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B3A4B),
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // أيقونة الرفض (X باللون الأحمر) كما في التصميم
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
+                  Center(
                     child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD32F2F).withOpacity(0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 50),
+                      child: const Center(
+                        child: CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Color(0xFFD32F2F),
+                          child: Icon(Icons.close, color: Colors.white, size: 45),
+                        ),
+                      ),
                     ),
                   ),
-
                   const SizedBox(height: 40),
-
-                  // نصوص التوضيح الخاصة بالرفض
                   const Text(
                     'The hospital cannot receive this patient',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1B3A4B),
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1B3A4B)),
                   ),
                   const SizedBox(height: 10),
                   const Text(
@@ -88,16 +71,14 @@ class CaseRejectedScreen extends StatelessWidget {
                       color: Color(0xFF1B3A4B),
                     ),
                   ),
-
                   const SizedBox(height: 60),
-
-                  // زر اقتراح مستشفيات قريبة (Suggest Nearby Hospitals)
                   ElevatedButton(
                     onPressed: () {
-                      // الانتقال لصفحة المستشفيات البديلة
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const NearbyHospitalScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => NearbyHospitalScreen(caseId: caseId),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(

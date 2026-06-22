@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileModel {
   final String name;
@@ -53,6 +54,7 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _supabase = Supabase.instance.client;
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
@@ -107,17 +109,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    if (widget.onUpdateProfilePressed != null) {
-      final updated = EditProfileModel(
-        name: _nameController.text,
-        email: _emailController.text,
-        phoneNumber: _phoneController.text,
-        dateOfBirth: _dobController.text,
-        imageUrl: widget.initialData.imageUrl,
-      );
-      await widget.onUpdateProfilePressed!(updated);
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        await _supabase.from('profiles').update({
+          'full_name': _nameController.text.trim(),
+          'phone_number': _phoneController.text.trim(),
+          'date_of_birth': _dobController.text.trim(),
+        }).eq('id', user.id);
+
+        if (widget.onUpdateProfilePressed != null) {
+          final updated = EditProfileModel(
+            name: _nameController.text,
+            email: _emailController.text,
+            phoneNumber: _phoneController.text,
+            dateOfBirth: _dobController.text,
+            imageUrl: widget.initialData.imageUrl,
+          );
+          await widget.onUpdateProfilePressed!(updated);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully in backend! 🚀'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      debugPrint("Error updating database profile: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update profile data, please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   InputDecoration _buildInputDecoration({
@@ -205,7 +239,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 image: DecorationImage(
-                                  image: widget.initialData.imageUrl != null
+                                  image: widget.initialData.imageUrl != null && widget.initialData.imageUrl!.isNotEmpty
                                       ? NetworkImage(widget.initialData.imageUrl!) as ImageProvider
                                       : const AssetImage('assets/images/default_avatar.png'),
                                   fit: BoxFit.cover,
@@ -247,7 +281,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           prefixIcon: const Icon(Icons.person, color: Colors.black),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return '';
+                          if (value == null || value.trim().isEmpty) return 'Name cannot be empty';
                           return null;
                         },
                       ),
@@ -264,13 +298,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        readOnly: true,
                         decoration: _buildInputDecoration(
                           prefixIcon: const Icon(Icons.lock, color: Colors.black),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return '';
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 20),
                       const Text(
@@ -308,7 +339,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return '';
+                          if (value == null || value.trim().isEmpty) return 'Phone number cannot be empty';
                           return null;
                         },
                       ),
@@ -327,9 +358,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: AbsorbPointer(
                           child: TextFormField(
                             controller: _dobController,
-                            decoration: _buildInputDecoration(),
+                            decoration: _buildInputDecoration(
+                              prefixIcon: const Icon(Icons.calendar_today, color: Colors.black26, size: 18),
+                            ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) return '';
+                              if (value == null || value.trim().isEmpty) return 'Date of birth cannot be empty';
                               return null;
                             },
                           ),

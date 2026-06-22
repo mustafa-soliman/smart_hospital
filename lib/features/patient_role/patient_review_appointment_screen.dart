@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:smart_hospital/features/patient_role/patient_payment_screen.dart';
 
 class PatientReviewAppointmentScreen extends StatelessWidget {
-  const PatientReviewAppointmentScreen({super.key});
+  final String doctorId;
+  final String appointmentDate;
+  final String appointmentTime;
+
+  const PatientReviewAppointmentScreen({
+    super.key,
+    required this.doctorId,
+    required this.appointmentDate,
+    required this.appointmentTime,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +20,11 @@ class PatientReviewAppointmentScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black), onPressed: () => Navigator.pop(context)),
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text('Review Appointment', style: TextStyle(color: Color(0xFF1A394A), fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
@@ -27,12 +40,13 @@ class PatientReviewAppointmentScreen extends StatelessWidget {
             const Text('BOOKING DETAILS', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey)),
             const SizedBox(height: 15),
             _buildDetailTile(Icons.videocam_outlined, 'CONSULTATION TYPE', 'Video Conference', true),
-            _buildDetailTile(Icons.account_balance_wallet_outlined, 'CONSULTATION FEE', '300.00Eg', false),
-            _buildDetailTile(Icons.person_outline, 'PATIENT NAME', 'Ahmed', false),
+            _buildDetailTile(Icons.calendar_today_outlined, 'DATE', appointmentDate, false),
+            _buildDetailTile(Icons.access_time, 'TIME', appointmentTime, false),
             const SizedBox(height: 30),
             _buildSecurePaymentInfo(),
             const SizedBox(height: 40),
             _buildConfirmButton(context),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -41,68 +55,58 @@ class PatientReviewAppointmentScreen extends StatelessWidget {
 
   Widget _buildDoctorSummaryCard() {
     return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-      child: Column(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+      ),
+      child: Row(
         children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset('assets/images/default_avatar.png', width: 70, height: 70, fit: BoxFit.cover),
-              ),
-              const SizedBox(width: 15),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)),
-                    child: const Text('VERIFIED EXPERT', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text('Dr. Hamza Ahmed', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const Text('Senior Cardiologist', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                ],
-              ),
-            ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: const Image(
+              image: AssetImage('assets/images/default_avatar.png'),
+              width: 64,
+              height: 64,
+              fit: BoxFit.cover,
+            ),
           ),
-          const Divider(height: 30),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildDateTimeInfo(Icons.calendar_today, 'DATE', 'Oct 24, 2025'),
-              _buildDateTimeInfo(Icons.access_time, 'TIME', '10:30 AM'),
-            ],
-          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Dr. Hamza Ahmed', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A394A))),
+                SizedBox(height: 4),
+                Text('Senior Cardiologist', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          )
         ],
       ),
     );
   }
 
-  Widget _buildDateTimeInfo(IconData icon, String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Row(children: [Icon(icon, color: Colors.blue, size: 18), const SizedBox(width: 8), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))]),
-      ],
-    );
-  }
-
-  Widget _buildDetailTile(IconData icon, String label, String value, bool hasArrow) {
+  Widget _buildDetailTile(IconData icon, String title, String value, bool hasArrow) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F4F7)),
+      ),
       child: Row(
         children: [
-          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: Colors.blue)),
+          Icon(icon, color: const Color(0xFF1A394A), size: 22),
           const SizedBox(width: 15),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)), Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))],
+            children: [
+              Text(title, style: const TextStyle(color: Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
           ),
           const Spacer(),
           if (hasArrow) const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
@@ -128,8 +132,24 @@ class PatientReviewAppointmentScreen extends StatelessWidget {
 
   Widget _buildConfirmButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PatientPaymentScreen())),
-      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A394A), minimumSize: const Size(double.infinity, 60), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PatientPaymentScreen(
+              doctorId: doctorId,
+              appointmentDate: appointmentDate,
+              appointmentTime: appointmentTime,
+            ),
+          ),
+        );
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF1A394A),
+        minimumSize: const Size(double.infinity, 60),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        elevation: 0,
+      ),
       child: const Text('Confirm & Pay 300.00Eg', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
     );
   }

@@ -1,24 +1,54 @@
 import 'package:flutter/material.dart';
 
 class PatientFilterScreen extends StatefulWidget {
-  const PatientFilterScreen({super.key});
+  // استقبال القيم الحالية من شاشة الـ List لضمان تجربة مستخدم احترافية
+  final String selectedSpecialty;
+  final RangeValues currentPriceRange;
+  final int currentRating;
+
+  const PatientFilterScreen({
+    super.key,
+    required this.selectedSpecialty,
+    required this.currentPriceRange,
+    required this.currentRating,
+  });
 
   @override
   State<PatientFilterScreen> createState() => _PatientFilterScreenState();
 }
 
 class _PatientFilterScreenState extends State<PatientFilterScreen> {
-  RangeValues _priceRange = const RangeValues(200, 350);
-  int _selectedRating = 4;
+  late RangeValues _priceRange;
+  late int _selectedRating;
+  late String _selectedSpecialty;
 
-  final List<Map<String, dynamic>> _specializations = [
-    {'name': 'All', 'isSelected': true},
-    {'name': 'Cardiologist', 'isSelected': false},
-    {'name': 'Dentist', 'isSelected': false},
-    {'name': 'Neurologist', 'isSelected': true},
-    {'name': 'Orthopedic', 'isSelected': false},
-    {'name': 'Dermatologist', 'isSelected': false},
+  // القائمة الكاملة للتخصصات بناءً على تصميم الـ UI والباك إند
+  final List<String> _categories = [
+    'All',
+    'Cardiologist',
+    'Dentist',
+    'Neurologist',
+    'Orthopedic',
+    'Dermatologist',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // تهيئة المتغيرات بناءً على القيم الممررة
+    _priceRange = widget.currentPriceRange;
+    _selectedRating = widget.currentRating;
+    _selectedSpecialty = widget.selectedSpecialty;
+  }
+
+  // دالة عمل إعادة تعيين للقيم الافتراضية عند الضغط على Reset
+  void _resetFilters() {
+    setState(() {
+      _priceRange = const RangeValues(200, 350);
+      _selectedRating = 4;
+      _selectedSpecialty = 'All';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +57,7 @@ class _PatientFilterScreenState extends State<PatientFilterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -38,8 +69,11 @@ class _PatientFilterScreenState extends State<PatientFilterScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
-            child: const Text('Reset', style: TextStyle(color: Color(0xFF0061C4), fontWeight: FontWeight.bold, fontSize: 16)),
+            onPressed: _resetFilters,
+            child: const Text(
+              'Reset',
+              style: TextStyle(color: Color(0xFF0061C4), fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
         ],
       ),
@@ -59,7 +93,17 @@ class _PatientFilterScreenState extends State<PatientFilterScreen> {
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: _specializations.map((spec) => _buildFilterChip(spec['name'], spec['isSelected'])).toList(),
+                    children: _categories.map((specName) {
+                      bool isSelected = _selectedSpecialty.toLowerCase() == specName.toLowerCase();
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedSpecialty = specName;
+                          });
+                        },
+                        child: _buildFilterChip(specName, isSelected),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 30),
                   Row(
@@ -120,11 +164,19 @@ class _PatientFilterScreenState extends State<PatientFilterScreen> {
           Padding(
             padding: const EdgeInsets.all(20),
             child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                // تمرير البيانات المفلترة بالكامل عند العودة لشاشة الـ List
+                Navigator.pop(context, {
+                  'specialty': _selectedSpecialty,
+                  'priceRange': _priceRange,
+                  'rating': _selectedRating,
+                });
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1B3A4B),
                 minimumSize: const Size(double.infinity, 60),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                elevation: 0,
               ),
               child: const Text('Apply Filters', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             ),

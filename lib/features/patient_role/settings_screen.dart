@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:smart_hospital/features/patient_role/password_manager_screen.dart';
 import 'package:smart_hospital/screens/sign_in_screen.dart';
 import 'package:smart_hospital/features/patient_role/notifications_screen.dart';
@@ -12,6 +13,39 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final _supabase = Supabase.instance.client;
+  bool _isDeleting = false;
+
+  Future<void> _deleteCurrentUserAccount() async {
+    setState(() => _isDeleting = true);
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+
+        await _supabase.from('patients').delete().eq('user_id', user.id);
+        await _supabase.from('profiles').delete().eq('id', user.id);
+
+        await _supabase.auth.signOut();
+
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const SignInScreen(userRole: 'Patient')),
+              (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error deleting account: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete account. Please try again later.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +60,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
+      body: _isDeleting
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF1A394A)))
+          : Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
         child: Column(
           children: [
@@ -34,10 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.lightbulb_outline,
               title: 'Notification Setting',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
               },
             ),
             const SizedBox(height: 16),
@@ -45,10 +78,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.key_outlined,
               title: 'Password Manager',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PasswordManagerScreen()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const PasswordManagerScreen()));
               },
             ),
             const SizedBox(height: 16),
@@ -60,13 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   context,
                   onConfirm: () {
                     Navigator.pop(context);
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SignInScreen(userRole: 'Patient'),
-                      ),
-                          (route) => false,
-                    );
+                    _deleteCurrentUserAccount();
                   },
                 );
               },
@@ -83,20 +107,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: Container(
         width: 46,
         height: 46,
-        decoration: const BoxDecoration(
-          color: Color(0xFF7DA0B1),
-          shape: BoxShape.circle,
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF7DA0B1), shape: BoxShape.circle),
         child: Icon(icon, color: Colors.white, size: 22),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 16,
-          color: Color(0xFF1A394A),
-        ),
-      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: Color(0xFF1A394A))),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF1A394A)),
       onTap: onTap,
     );

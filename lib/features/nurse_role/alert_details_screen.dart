@@ -1,15 +1,16 @@
-// File: lib/features/nurse_role/alert_details_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AlertDetailsScreen extends StatefulWidget {
   final String patientName;
   final String roomNumber;
+  final String? caseId;
 
   const AlertDetailsScreen({
     super.key,
     required this.patientName,
     required this.roomNumber,
+    this.caseId,
   });
 
   @override
@@ -18,14 +19,14 @@ class AlertDetailsScreen extends StatefulWidget {
 
 class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
   final TextEditingController _noteController = TextEditingController();
+  final _supabase = Supabase.instance.client;
+  bool _isResolving = false;
 
-  // 1. اللوجيك الخاص بإظهار الـ Toast العلوي الناجح تبيكال زي الصورة الثانية
   void _showSuccessOverlay() {
     showDialog(
       context: context,
-      barrierColor: Colors.transparent, // شفافة تماماً عشان تظهر فوق الشاشة الأصلية
+      barrierColor: Colors.transparent,
       builder: (BuildContext context) {
-        // غلق التوست تلقائياً بعد ثانيتين
         Future.delayed(const Duration(seconds: 2), () {
           if (Navigator.canPop(context)) {
             Navigator.pop(context);
@@ -35,21 +36,21 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
         return Stack(
           children: [
             Positioned(
-              top: 50, // التموضع العلوي تبيكال زي الصورة
+              top: MediaQuery.of(context).padding.top + 10,
               left: 20,
               right: 20,
               child: Material(
                 color: Colors.transparent,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 15,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       )
                     ],
                   ),
@@ -69,7 +70,7 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
                           'Resolve Alert successfully',
                           style: TextStyle(
                             color: Color(0xFF0F0F17),
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
                         ),
@@ -91,7 +92,51 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
     );
   }
 
-  // 2. اللوجيك الخاص بالـ BottomSheet تبيكال نفس تصميم الصورة الأولى
+  Future<void> _submitResolution() async {
+    if (widget.caseId == null) return;
+    setState(() => _isResolving = true);
+
+    try {
+      await _supabase
+          .from('emergency_cases')
+          .update({'status': 'resolved'})
+          .eq('id', widget.caseId!);
+
+      final user = _supabase.auth.currentUser;
+      if (user != null) {
+        final profileRes = await _supabase
+            .from('profiles')
+            .select('id')
+            .eq('full_name', widget.patientName)
+            .maybeSingle();
+
+        if (profileRes != null) {
+          final patientRes = await _supabase
+              .from('patients')
+              .select('id')
+              .eq('user_id', profileRes['id'])
+              .maybeSingle();
+
+          if (patientRes != null && _noteController.text.trim().isNotEmpty) {
+            await _supabase.from('medical_records').insert({
+              'patient_id': patientRes['id'],
+              'diagnosis': 'Emergency Resolved: ${_noteController.text.trim()}',
+              'treatment': 'Emergency intervention completed',
+            });
+          }
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      _showSuccessOverlay();
+    } catch (e) {
+      debugPrint("Error resolving case: $e");
+    } finally {
+      if (mounted) setState(() => _isResolving = false);
+    }
+  }
+
   void _showResolutionBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -112,7 +157,6 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // الـ Notch العلوي الرمادي الصغير
               Center(
                 child: Container(
                   width: 44,
@@ -126,26 +170,17 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
               const SizedBox(height: 24),
               const Text(
                 'Resolution Details',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F0F17),
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
                 'Observation Note',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
-              // حقل إدخال الملاحظات تبيكال بنفس درجات ألوان الفيجما المرفوعة
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9).withValues(alpha: 0.5),
+                  color: const Color(0xFFF1F5F9).withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: TextFormField(
@@ -161,20 +196,17 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // زر الـ Resolve Alert جاهز لربط مخرجات الـ Controller بالباك اند
               ElevatedButton(
-                onPressed: () {
-                  // هنا بمجرد الربط بتمرر الـ _noteController.text للـ API بتاعك
-                  Navigator.pop(context); // غلق الـ BottomSheet
-                  _showSuccessOverlay(); // إظهار توست النجاح العلوي
-                },
+                onPressed: _isResolving ? null : _submitResolution,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B3546), // نفس درجة الكحلي الغامق بالظبط
+                  backgroundColor: const Color(0xFF1B3546),
                   minimumSize: const Size(double.infinity, 56),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   elevation: 0,
                 ),
-                child: const Text(
+                child: _isResolving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
                   'Resolve Alert',
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -216,183 +248,186 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFDEBEB),
-                            borderRadius: BorderRadius.circular(8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFDEBEB),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'CRITICAL ALERT',
+                                  style: TextStyle(color: Color(0xFFE05858), fontWeight: FontWeight.bold, fontSize: 10),
+                                ),
+                              ),
+                              const Text(
+                                'Updated 2m ago',
+                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                              ),
+                            ],
                           ),
-                          child: const Text(
-                            'CRITICAL ALERT',
-                            style: TextStyle(color: Color(0xFFE05858), fontWeight: FontWeight.bold, fontSize: 10),
+                          const SizedBox(height: 12),
+                          Text(
+                            widget.patientName,
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
                           ),
-                        ),
-                        const Text(
-                          'Updated 2m ago',
-                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_outlined, color: Color(0xFF94A3B8), size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Room ${widget.roomNumber} — Post-Op Recovery',
+                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              _buildMiniInfoBox('BEDSIDE', 'Bedside ${widget.roomNumber}'),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                                  ),
+                                  child: const Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('ADMITTED', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold)),
+                                      SizedBox(height: 4),
+                                      Text('14 Oct, 10.15', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F0F17))),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Live Vitals',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      widget.patientName,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17)),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFDEBEB).withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: const BoxDecoration(color: Color(0xFFFDEBEB), shape: BoxShape.circle),
+                            child: const Icon(Icons.favorite, color: Color(0xFFE05858), size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('HEART RATE', style: TextStyle(color: Color(0xFFE05858), fontSize: 11, fontWeight: FontWeight.bold)),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: const [
+                                  Text('142', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17))),
+                                  SizedBox(width: 4),
+                                  Text('BPM', style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Row(
+                            children: List.generate(5, (index) {
+                              return Container(
+                                width: 4,
+                                height: (index == 0 || index == 4) ? 14.0 : (index == 2 ? 28.0 : 22.0),
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                decoration: BoxDecoration(color: const Color(0xFFE05858), borderRadius: BorderRadius.circular(2)),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, color: Color(0xFF94A3B8), size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${widget.roomNumber} — Post-Op Recovery',
-                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                        ),
+                        _buildSmallVitalCard('SPO2', '91%', 'Attention Needed', Icons.air, const Color(0xFFC96A1F), const Color(0xFFFEF5E6)),
+                        const SizedBox(width: 16),
+                        _buildSmallVitalCard('TEMP', '98.6°F', 'Within Range', Icons.thermostat, const Color(0xFF007AFF), const Color(0xFFE3F2FD)),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        _buildMiniInfoBox('BEDSIDE', widget.roomNumber.replaceAll('ROOM ', 'Bedside ')),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.all(Radius.circular(16)),
-                            ),
-                            child: const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9).withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: const [
+                              Icon(Icons.psychology_outlined, color: Color(0xFF007AFF)),
+                              SizedBox(width: 10),
+                              Text('Alert Analysis', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F0F17))),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          RichText(
+                            text: const TextSpan(
+                              style: TextStyle(color: Color(0xFF475569), fontSize: 14, height: 1.5),
                               children: [
-                                Text('ADMITTED', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold)),
-                                SizedBox(height: 4),
-                                Text('14 Oct, 10.15', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F0F17))),
+                                TextSpan(text: 'Persistent tachycardia detected over the last 15 minutes. Patient reports '),
+                                TextSpan(text: 'slight chest discomfort', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F0F17))),
+                                TextSpan(text: '. Immediate physical assessment recommended.'),
                               ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Live Vitals',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFDEBEB).withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(color: Color(0xFFFDEBEB), shape: BoxShape.circle),
-                      child: const Icon(Icons.favorite, color: Color(0xFFE05858), size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('HEART RATE', style: TextStyle(color: Color(0xFFE05858), fontSize: 11, fontWeight: FontWeight.bold)),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: const [
-                            Text('142', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0F0F17))),
-                            SizedBox(width: 4),
-                            Text('BPM', style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: List.generate(5, (index) {
-                        return Container(
-                          width: 4,
-                          height: (index == 0 || index == 4) ? 14.0 : (index == 2 ? 28.0 : 22.0),
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(color: const Color(0xFFE05858), borderRadius: BorderRadius.circular(2)),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildSmallVitalCard('SPO2', '91%', 'Attention Needed', Icons.air, const Color(0xFFC96A1F), const Color(0xFFFEF5E6)),
-                  const SizedBox(width: 16),
-                  _buildSmallVitalCard('TEMP', '98.6°F', 'Within Range', Icons.thermostat, const Color(0xFF007AFF), const Color(0xFFE3F2FD)),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9).withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.psychology_outlined, color: Color(0xFF007AFF)),
-                        SizedBox(width: 10),
-                        Text('Alert Analysis', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF0F0F17))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    RichText(
-                      text: const TextSpan(
-                        style: TextStyle(color: Color(0xFF475569), fontSize: 14, height: 1.5),
-                        children: [
-                          TextSpan(text: 'Persistent tachycardia detected over the last 15 minutes. Patient reports '),
-                          TextSpan(text: 'slight chest discomfort', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F0F17))),
-                          TextSpan(text: '. Immediate physical assessment recommended.'),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
-              // تم ربط الزر السفلي بالـ BottomSheet التبيكال أهو
-              ElevatedButton(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ElevatedButton(
                 onPressed: _showResolutionBottomSheet,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B3546),
@@ -402,9 +437,8 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
                 ),
                 child: const Text('Update State', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -435,11 +469,7 @@ class _AlertDetailsScreenState extends State<AlertDetailsScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.01),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
+            BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 8, offset: const Offset(0, 4))
           ],
         ),
         child: Column(
